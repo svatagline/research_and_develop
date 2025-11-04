@@ -16,20 +16,34 @@ const INITIAL_ANIMATION_PARTS = [
   //   end: 5700, // <-- Changed from 2800 to 5700 for testing
   //   repeats: 1,
   //   speed: 0.1,
-  //   cameraPosition: [0, -0.37, 2.55],
+  //   cameraPosition: [0, -0.57, 2.55],
   //   cameraFOV: 40,
   //   objectPosition: [-0.2, -0.8, 0],
   //   objectRotation: [0, 0, 0],
   //   objectScale: [1, 1, 1],
   //   lightPosition: [10, 10, 5],
   // },
+ 
+  {
+    id: 1,
+    start: 2801,
+    end: 2901,
+    repeats: 1,
+    speed: 0.1,
+    cameraPosition: [0, -0.47, 2.55],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.8, 0],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 5],
+  },
   {
     id: 2,
     start: 2801,
     end: 3150,
     repeats: 10,
     speed: 0.5,
-    cameraPosition: [0, -0.37, 2.55],
+    cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
@@ -435,7 +449,7 @@ const NumberInput = ({ label, value, onChange, step = 1, min, max }) => (
 // --- Main Viewer Component ---
 // ----------------------------------------------------------------------
 export default function ModelViewer() {
-  const GLB_PATH = "girlAnimation/girlAnimation.glb";
+  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
   const [isReady, setIsReady] = useState(false);
   const [isUserControllingCamera, setIsUserControllingCamera] = useState(false);
   const [animationParts, setAnimationParts] = useState(INITIAL_ANIMATION_PARTS);
