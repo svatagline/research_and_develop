@@ -26,8 +26,8 @@ const INITIAL_ANIMATION_PARTS = [
  
   {
     id: 1,
-    start: 2801,
-    end: 2901,
+    start: 2701,
+    end: 2800,
     repeats: 1,
     speed: 0.1,
     cameraPosition: [0, -0.47, 2.55],
