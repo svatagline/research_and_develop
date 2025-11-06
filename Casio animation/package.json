@@ -10,14 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@esotericsoftware/spine-player": "^4.2.95",
     "@pixi/graphics-extras": "^7.4.3",
     "@pixi/react": "^8.0.3",
     "@react-three/drei": "^10.7.6",
     "@react-three/fiber": "^9.4.0",
     "gsap": "^3.13.0",
     "pixi-projection": "^1.0.0",
-    "pixi-spine": "^4.0.6",
-    "pixi.js": "^7.4.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "three": "^0.180.0"

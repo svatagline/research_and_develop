@@ -1,4 +1,5 @@
-import GirlAnimation from "./components/girlAnimation/GirlAnimation";
+ 
+import SpinePlayer from "./components/spine animation/SpineAnimation";
 // import GirlAnimation from "./components/girlAnimation/GirlAnimationUW";
 // import TossModelViewer from "./components/toss/TossModelViewer";
 
@@ -13,7 +14,7 @@ function App() {
       <main>
       {/* <TossModelViewer />   */}
         {/* <CardDistributionAnimation/> */}
-        <GirlAnimation/>
+        <SpinePlayer/>
    
       </main>
     </div>
