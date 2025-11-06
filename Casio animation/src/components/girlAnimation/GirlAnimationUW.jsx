@@ -436,7 +436,7 @@ const NumberInput = ({ label, value, onChange, step = 1, min, max }) => (
 // --- Main Viewer Component ---
 // ----------------------------------------------------------------------
 export default function ModelViewer() {
-  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
+  const GLB_PATH = "girlAnimation/2D ANIMATION1.glb";
   const [isReady, setIsReady] = useState(false);
   const [isUserControllingCamera, setIsUserControllingCamera] = useState(false);
   const [animationParts, setAnimationParts] = useState(INITIAL_ANIMATION_PARTS);

@@ -1,10 +1,11 @@
 import { OrbitControls, useAnimations, useGLTF } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
+// --- BLINK: Import useState ---
 import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 // --- ANIMATION CONFIGURATION ---
-// I'm using your exact configuration
+// (Your configuration remains the same)
 const ANIMATION_PARTS = [
   {
     id: 0,
@@ -57,8 +58,8 @@ const ANIMATION_PARTS = [
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
     lightPosition: [10, 10, 5],
-  }, 
-   
+  },
+
   {
     id: 4,
     start: 3261,
@@ -88,33 +89,50 @@ const ANIMATION_PARTS = [
 ];
 
 // --- Model Component ---
-// This component now only handles loading and playing the animation sequence.
 function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
   const group = useRef();
   const light = useRef();
   const { scene, animations } = useGLTF(modelPath);
-  
-  // --- FIX ---
-  // Pass `animations || []` to useAnimations. 
-  // This prevents an error if `animations` is undefined for a render pass
-  // before Suspense has fully managed the async loading.
+
   const { actions, mixer } = useAnimations(animations || [], group);
-  
   const { camera } = useThree();
 
   // Internal state for managing the sequence
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
   const [currentPartRepeats, setCurrentPartRepeats] = useState(0);
 
-  // Fix for skinned mesh position (from your original code)
+  // --- BLINK: State to hold the eyelid mesh ---
+  const [eyelidMesh, setEyelidMesh] = useState(null);
+
+  // Fix for skinned mesh position AND find the eyelid
   useEffect(() => {
     if (scene) {
+      let foundEyelid = null;
       scene.traverse((object) => {
+        // Skinned mesh fix
         if (object.isSkinnedMesh) {
           object.bind(object.skeleton, object.bindMatrix);
           object.skeleton.pose();
         }
+
+        // --- BLINK: Find the mesh by its name from Blender ---
+        // --- FIX: We search for *any* object (Mesh, Group, etc.) ---
+        // We also only find the *first* one to avoid conflicts
+        if (!foundEyelid && object.name === "eyelid") {
+          console.log("Found eyelid object:", object);
+          foundEyelid = object;
+          // --- BLINK: Start with the eyelid hidden ---
+          object.visible = false;
+        }
       });
+
+      if (foundEyelid) {
+        setEyelidMesh(foundEyelid);
+      } else {
+        console.warn(
+          "Could not find mesh with name 'eyelid'. Blink animation will not play."
+        );
+      }
     }
   }, [scene]);
 
@@ -124,7 +142,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 
     const allActions = Object.values(actions).filter((action) => action);
     if (allActions.length === 0) return;
-    
+
     // --- Initial Scene Setup (Camera, Model Position, etc.) ---
     const initialPart = animationParts[0];
     camera.position.set(...initialPart.cameraPosition);
@@ -143,31 +161,23 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     allActions.forEach((action) => {
       action.loop = THREE.LoopOnce;
       action.clampWhenFinished = true;
-      // Set initial time to the start of the first part
       action.time = animationParts[0].start / 1000;
-      // Play the action but keep it paused, ready to go
       action.play().paused = true;
     });
 
     // Reset sequence state
     setCurrentPartIndex(0);
     setCurrentPartRepeats(0);
+  }, [actions, mixer, camera, animationParts]);
 
-  }, [actions, mixer, camera, animationParts]); // Run when actions are ready
-
-  // --- FIX ---
-  // This effect reacts to the play/pause button toggle (the `isPlaying` prop)
+  // This effect reacts to the play/pause button toggle
   useEffect(() => {
     if (!actions) return;
     const allActions = Object.values(actions).filter((action) => action);
-
-    // When isPlaying changes, update the 'paused' state of all actions
     allActions.forEach((action) => {
-      // If we are "playing", the action should NOT be paused.
       action.paused = !isPlaying;
     });
-
-  }, [isPlaying, actions]); // Runs whenever isPlaying or actions change
+  }, [isPlaying, actions]);
 
   // This is the core update loop
   useFrame((state, delta) => {
@@ -181,13 +191,10 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     if (!currentPart) return;
 
     // Control speed via mixer.timeScale
-    // If isPlaying is false, timeScale is 0, pausing the animation.
     mixer.timeScale = isPlaying ? currentPart.speed : 0;
     mixer.update(delta);
 
     // --- Camera/Object Lerping ---
-    // This smoothly moves the camera and object to the target positions
-    // for the current animation part.
     const interpolationFactor = 0.05;
     camera.position.lerp(
       new THREE.Vector3(...currentPart.cameraPosition),
@@ -217,16 +224,38 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     }
     // --- End Lerping ---
 
-
     // Only run the sequencing logic if we are playing
     if (isPlaying) {
       const currentTimeMs = masterAction.time * 1000;
       const segmentEndMs = currentPart.end;
       const isLastPartInConfig = currentPartIndex === animationParts.length - 1;
 
+      // --- BLINK: LOGIC START ---
+      // NEW LOGIC: Tie visibility to the current animation part ID
+      if (eyelidMesh) {
+        const animTimeSec = masterAction.time; // This is the time in seconds
+
+        // --- Priority 1: Force SHOW period (2700ms to 3150ms) ---
+        // We check the ID of the current part, which is more reliable than time.
+        // Your animation part with id: 2 is the 2700-3150ms segment.
+        if (currentPart.id === 2) {
+          // If we are in the forced-SHOW period, it's always true (visible).
+          eyelidMesh.visible = true;
+        } else {
+          // --- Priority 2: Repeating blink (only if NOT in part 2) ---
+          // This logic now only runs when we are outside the 2700-3150ms window.
+          const cycleDuration = 2.0;
+          const blinkDuration = 0.02;
+          const timeInCycle = animTimeSec % cycleDuration;
+          const isRepeatingBlink = (timeInCycle < blinkDuration);
+
+          eyelidMesh.visible = isRepeatingBlink;
+        }
+      }
+      // --- BLINK: LOGIC END ---
+
       // Check if we've reached the end of the current part
       if (currentTimeMs >= segmentEndMs) {
-        
         // --- REPEAT LOGIC ---
         if (currentPartRepeats < currentPart.repeats - 1) {
           setCurrentPartRepeats((prev) => prev + 1);
@@ -236,7 +265,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
             action.paused = false;
             action.play();
           });
-        } 
+        }
         // --- TRANSITION LOGIC ---
         else if (!isLastPartInConfig) {
           const nextPartIndex = currentPartIndex + 1;
@@ -248,7 +277,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
             action.paused = false;
             action.play();
           });
-        } 
+        }
         // --- STOP LOGIC ---
         else {
           // End of the entire sequence
@@ -256,8 +285,9 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           // Reset state for the next time 'Play' is clicked
           setCurrentPartIndex(0);
           setCurrentPartRepeats(0);
+          // --- BLINK: Hide eyelid when animation stops ---
+          if (eyelidMesh) eyelidMesh.visible = false;
           allActions.forEach((action) => {
-            // Reset time to the very beginning
             action.time = animationParts[0].start / 1000;
           });
         }
@@ -267,7 +297,6 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 
   return (
     <>
-      {/* Add a light, as the original component did */}
       <directionalLight ref={light} intensity={1.5} />
       <primitive object={scene} ref={group} dispose={null} />
     </>
@@ -275,14 +304,12 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 }
 
 // ----------------------------------------------------------------------
-// --- Main App Component ---
+// --- Main App Component --- (DESIGN AND TYPO FIXES)
 // ----------------------------------------------------------------------
 export default function App() {
   // --- IMPORTANT ---
   // Replace this with the correct path to your GLB file
-  const GLB_PATH = "girlAnimation/2D ANIMATION.glb"; 
-
-  // Single state to control play/pause
+  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handlePlayPause = () => {
@@ -290,17 +317,36 @@ export default function App() {
   };
 
   return (
-    <div style={{
-      width: "100vw",
-      height: "100vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: "sans-serif",
-      background: "#222"
-    }}>
-      <div style={{ width: "90%", height: "80%", background: "#000" }}>
+    <div
+      style={{
+        width: "100vw", // <-- Fixed typo, was "10Svw"
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'Inter', sans-serif", // Using a cleaner font
+        background: "#111827", // Dark blue-gray background
+        color: "white",
+        padding: "20px",
+        boxSizing: "border-box", // Ensures padding doesn't break layout
+      }}
+    >
+      <h1 style={{ fontWeight: 600, fontSize: "28px", margin: "0 0 16px 0" }}>
+        Animation Preview
+      </h1>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "1000px", // Set a max width for large screens
+          height: "70vh", // Use viewport height
+          background: "#1F2937", // Lighter gray background for canvas
+          borderRadius: "16px", // Rounded corners
+          overflow: "hidden", // Ensures canvas stays inside border
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        {/* --- FIX: Re-added the missing Canvas block --- */}
         <Canvas>
           <ambientLight intensity={0.8} />
           <Suspense fallback={null}>
@@ -308,25 +354,42 @@ export default function App() {
               modelPath={GLB_PATH}
               animationParts={ANIMATION_PARTS}
               isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying} // Pass the setter down
+              setIsPlaying={setIsPlaying}
             />
           </Suspense>
           <OrbitControls />
         </Canvas>
       </div>
+      {/* --- FIX: Moved the button to be *after* the canvas div --- */}
       <button
         onClick={handlePlayPause}
         style={{
-          fontSize: "24px",
-          padding: "15px 30px",
-          marginTop: "20px",
+          fontSize: "20px",
+          fontWeight: 600,
+          padding: "12px 24px",
+          marginTop: "24px",
           cursor: "pointer",
-          borderRadius: "8px",
+          borderRadius: "12px",
           border: "none",
-          background: isPlaying ? "#f44336" : "#4CAF50", // Red when playing, Green when paused
+          background: isPlaying
+            ? "linear-gradient(145deg, #e63946, #c32f3b)"
+            : "linear-gradient(145deg, #52b788, #40916c)",
           color: "white",
-          minWidth: "150px"
+          minWidth: "150px",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
+          transition: "transform 0.1s ease, box-shadow 0.1s ease",
         }}
+        // Add hover and active states inline for simplicity
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = "scale(1.03)";
+          e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+        }}
+        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
       >
         {isPlaying ? "Pause ⏸" : "Play ▶"}
       </button>
