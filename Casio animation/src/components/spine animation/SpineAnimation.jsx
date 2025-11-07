@@ -19,6 +19,8 @@ const ALL_LIP_SLOTS = [
   "smiling_lips"
 ];
 
+// ... (imports remain the same)
+
 function GirlAnimation() {
   const containerRef = useRef(null);
   const [player, setPlayer] = useState(null);
@@ -27,15 +29,17 @@ function GirlAnimation() {
     let playerInstance; 
 
     if (containerRef.current) {
-      playerInstance = new SpinePlayer(containerRef.current, {
+   playerInstance = new SpinePlayer(containerRef.current, {
         jsonUrl: JSON_PATH,
         atlasUrl: ATLAS_PATH,
         pngUrl: IMAGE_PATH,
-        premultipliedAlpha: true,
-        background: "#f0f0f0",
-        viewport: { padLeft: 0, padRight: 0, padTop: 0, padBottom: 0 },
         
-        // Using the real animation name from your screenshots
+        background: "transparent", // <-- This is still correct
+        
+        // !! HERE IS THE CHANGE !!
+        premultipliedAlpha: false,  // <-- Change this from 'true' to 'false'
+
+        viewport: { padLeft: 0, padRight: 0, padTop: 0, padBottom: 0 },
         animation: "Idle_normal", 
       });
       
@@ -49,7 +53,8 @@ function GirlAnimation() {
     };
   }, []);
 
-  // !! NEW, REUSABLE FUNCTION !!
+  // ... (setLipExpression function remains the same) ...
+
   const setLipExpression = (lipSlotName) => {
     if (!player) {
       console.log("Player not loaded yet");
@@ -58,34 +63,27 @@ function GirlAnimation() {
 
     try {
       const skeleton = player.skeleton;
-
-      // 1. Hide ALL other lip expressions
       for (const slot of ALL_LIP_SLOTS) {
         skeleton.setAttachment(slot, null);
       }
-
-      // 2. Show ONLY the one we want
-      // We assume the attachment name is the same as the slot name
-      // (e.g., "happy_lips" slot uses "happy_lips" attachment)
       skeleton.setAttachment(lipSlotName, lipSlotName);
-
       console.log(`Attachment set to: ${lipSlotName}`);
-
     } catch (error) {
-      // This error will happen if the attachment (image) name is
-      // different from the slot name.
       console.error(`Error setting attachment: ${lipSlotName}`, error);
     }
   };
 
   return (
     <div>
+      {/* To see the transparency, make sure the <div> 
+        containing the component has a background color or image.
+      */}
       <div 
         ref={containerRef} 
-        style={{ width: '500px', height: '500px' }} // <-- ADJUST SIZE AS NEEDED
+        style={{ width: '500px', height: '500px' }}
       />
       
-      {/* !! NEW BUTTONS !! */}
+      {/* ... (buttons remain the same) ... */}
       <button 
         onClick={() => setLipExpression("happy_lips")} 
         style={{ marginTop: '10px', marginRight: '10px', padding: '10px 20px', fontSize: '16px' }}
@@ -100,7 +98,6 @@ function GirlAnimation() {
         Make Sad
       </button>
 
-      {/* You can even add a button to go back to normal */}
       <button 
         onClick={() => setLipExpression("normal_lips")} 
         style={{ marginTop: '10px', marginLeft: '10px', padding: '10px 20px', fontSize: '16px' }}
