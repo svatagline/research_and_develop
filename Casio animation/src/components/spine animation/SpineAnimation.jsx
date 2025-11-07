@@ -28,16 +28,16 @@ function GirlAnimation() {
   useEffect(() => {
     let playerInstance; 
 
-    if (containerRef.current) {
-   playerInstance = new SpinePlayer(containerRef.current, {
+  if (containerRef.current) {
+      playerInstance = new SpinePlayer(containerRef.current, {
         jsonUrl: JSON_PATH,
         atlasUrl: ATLAS_PATH,
         pngUrl: IMAGE_PATH,
         
-        background: "transparent", // <-- This is still correct
-        
-        // !! HERE IS THE CHANGE !!
-        premultipliedAlpha: false,  // <-- Change this from 'true' to 'false'
+        // !! ALL THREE SETTINGS !!
+        background: "transparent",  // 1. Tell Spine to clear to transparent
+        alpha: true,                // 2. Tell Browser to create a transparent canvas
+        premultipliedAlpha: false,  // 3. Match your asset export (keep as false for now)
 
         viewport: { padLeft: 0, padRight: 0, padTop: 0, padBottom: 0 },
         animation: "Idle_normal", 
@@ -74,10 +74,8 @@ function GirlAnimation() {
   };
 
   return (
-    <div>
-      {/* To see the transparency, make sure the <div> 
-        containing the component has a background color or image.
-      */}
+    <div style={{ backgroundColor: '#ffffff', padding: '20px', textAlign: 'center' }}>
+      
       <div 
         ref={containerRef} 
         style={{ width: '500px', height: '500px' }}
