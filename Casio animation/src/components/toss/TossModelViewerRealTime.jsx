@@ -7,82 +7,43 @@ import * as THREE from "three";
 // --- ANIMATION CONFIGURATION ---
 // (Your configuration remains the same)
 const ANIMATION_PARTS = [
-  {
-    id: 0,
-    start: 0,
-    end: 1500,
-    repeats: 1,
-    speed: 0.1,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
+  // ... (rest of your ANIMATION_PARTS array)
   {
     id: 1,
-    start: 2001,
-    end: 2700,
+    start: 1,
+    end: 7000,
     repeats: 1,
-    speed: 0.05,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-  {
-    id: 2,
-    start: 2700,
-    end: 3150,
-    repeats: 10,
     speed: 0.5,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-  {
-    id: 3,
-    start: 3150,
-    end: 3260,
-    repeats: 1,
-    speed: 0.05,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-
-  {
-    id: 4,
-    start: 3261,
-    end: 4005,
-    repeats: 1,
-    speed: 0.2,
-    cameraPosition: [0, 1.1, 0],
+    cameraPosition: [0, 2.1, 0],
     cameraFOV: 50,
-    objectPosition: [-0.1, 0, -0.1],
-    objectRotation: [0, 0, 0],
+    objectPosition: [0, 1, 0.2],
+    objectRotation: [-0.1, 1.6, -0.3],
     objectScale: [1, 1, 1],
     lightPosition: [0, 10, 0],
   },
   {
-    id: 5,
-    start: 4006,
-    end: 7000,
+    id: 2,
+    start: 7000,
+    end: 8950,
     repeats: 1,
     speed: 0.5,
-    cameraPosition: [0, 1.1, 0],
+    cameraPosition: [0, 1.7, 0],
     cameraFOV: 50,
-    objectPosition: [-0.1, 0, -0.1],
-    objectRotation: [0, 0, 0],
+    objectPosition: [0, 0.8, 0.1],
+    objectRotation: [0, 1.7, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [0, 10, 0],
+  },
+  {
+    id: 3,
+    start: 8950,
+    end: 9000,
+    repeats: 1,
+    speed: 0.03,
+    cameraPosition: [0, 2.1, 0],
+    cameraFOV: 50,
+    objectPosition: [0, 1, 0.2],
+    objectRotation: [-0.1, 1.6, -0.3],
     objectScale: [1, 1, 1],
     lightPosition: [0, 10, 0],
   },
@@ -104,10 +65,23 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
   // --- BLINK: State to hold the eyelid mesh ---
   const [eyelidMesh, setEyelidMesh] = useState(null);
 
-  // Fix for skinned mesh position AND find the eyelid
+  // --- NEW: State to hold references for the dynamically hidden meshes ---
+  const [meshReferences, setMeshReferences] = useState({});
+
+  // Fix for skinned mesh position AND find the eyelid AND the dynamic meshes
   useEffect(() => {
     if (scene) {
       let foundEyelid = null;
+      const refs = {};
+
+      // The names we need to find and store
+      const targetMeshNames = [
+        "toss lower close hand",
+        "first fingure",
+        "second fingure",
+        "toss lower open hand",
+      ];
+
       scene.traverse((object) => {
         // Skinned mesh fix
         if (object.isSkinnedMesh) {
@@ -115,14 +89,20 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           object.skeleton.pose();
         }
 
-        // --- BLINK: Find the mesh by its name from Blender ---
-        // --- FIX: We search for *any* object (Mesh, Group, etc.) ---
-        // We also only find the *first* one to avoid conflicts
+        // --- BLINK: Find the eyelid mesh ---
         if (!foundEyelid && object.name === "eyelid") {
           console.log("Found eyelid object:", object);
           foundEyelid = object;
-          // --- BLINK: Start with the eyelid hidden ---
           object.visible = false;
+        }
+
+        // --- NEW: Find and store the target meshes ---
+        if (targetMeshNames.includes(object.name)) {
+          console.log(`Found dynamic mesh: ${object.name}`);
+          // Store the object reference keyed by its name
+          refs[object.name] = object;
+          // IMPORTANT: Start all these meshes as VISIBLE (default state)
+          object.visible = true;
         }
       });
 
@@ -133,6 +113,9 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           "Could not find mesh with name 'eyelid'. Blink animation will not play."
         );
       }
+
+      // Store all found dynamic mesh references
+      setMeshReferences(refs);
     }
   }, [scene]);
 
@@ -224,26 +207,57 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     }
     // --- End Lerping ---
 
+    // --- NEW: Dynamic Mesh Visibility Logic ---
+    if (Object.keys(meshReferences).length > 0) {
+      const {
+        "toss lower close hand": closeHand,
+        "first fingure": firstFingure,
+        "second fingure": secondFingure,
+        "toss lower open hand": openHand,
+      } = meshReferences;
+
+      // Reset visibility to true before applying phase-specific rules
+      // (This makes sure that parts not mentioned in the current phase are visible)
+      if (closeHand) closeHand.visible = true;
+      if (firstFingure) firstFingure.visible = true;
+      if (secondFingure) secondFingure.visible = true;
+      if (openHand) openHand.visible = true;
+
+      if (currentPart.id === 1) {
+        // if ANIMATION_PART id = 1 hide "toss lower close hand" named mesh
+        if (closeHand) {
+          closeHand.visible = false;
+        }
+      } else if (currentPart.id === 2) {
+        // if ANIMATION_PARTS id = 2 hide "first fingure","second fingure","toss lower open hand" named mesh
+        if (firstFingure) {
+          firstFingure.visible = false;
+        }
+        if (secondFingure) {
+          secondFingure.visible = false;
+        }
+        if (openHand) {
+          openHand.visible = false;
+        }
+      }
+      // For any other part (e.g., id=3), all meshes will remain visible
+      // because they were reset to `true` at the start of this block.
+    }
+    // --- END Dynamic Mesh Visibility Logic ---
+
     // Only run the sequencing logic if we are playing
     if (isPlaying) {
       const currentTimeMs = masterAction.time * 1000;
       const segmentEndMs = currentPart.end;
       const isLastPartInConfig = currentPartIndex === animationParts.length - 1;
 
-      // --- BLINK: LOGIC START ---
-      // NEW LOGIC: Tie visibility to the current animation part ID
+      // --- BLINK: LOGIC START (Your existing blink logic) ---
       if (eyelidMesh) {
-        const animTimeSec = masterAction.time; // This is the time in seconds
+        const animTimeSec = masterAction.time;
 
-        // --- Priority 1: Force SHOW period (2700ms to 3150ms) ---
-        // We check the ID of the current part, which is more reliable than time.
-        // Your animation part with id: 2 is the 2700-3150ms segment.
         if (currentPart.id === 2) {
-          // If we are in the forced-SHOW period, it's always true (visible).
           eyelidMesh.visible = true;
         } else {
-          // --- Priority 2: Repeating blink (only if NOT in part 2) ---
-          // This logic now only runs when we are outside the 2700-3150ms window.
           const cycleDuration = 2.0;
           const blinkDuration = 0.02;
           const timeInCycle = animTimeSec % cycleDuration;
@@ -287,6 +301,10 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           setCurrentPartRepeats(0);
           // --- BLINK: Hide eyelid when animation stops ---
           if (eyelidMesh) eyelidMesh.visible = false;
+          // --- NEW: Ensure all dynamic meshes are VISIBLE when stopped/reset ---
+          Object.values(meshReferences).forEach((mesh) => {
+            if (mesh) mesh.visible = true;
+          });
           allActions.forEach((action) => {
             action.time = animationParts[0].start / 1000;
           });
@@ -302,14 +320,13 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     </>
   );
 }
-
 // ----------------------------------------------------------------------
-// --- Main App Component --- (DESIGN AND TYPO FIXES)
+// --- Main App Component --- (No changes needed here)
 // ----------------------------------------------------------------------
-export default function App() {
-  // --- IMPORTANT ---
-  // Replace this with the correct path to your GLB file
-  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
+export default function TossModelViewerRealTime() {
+  // ... (rest of your component)
+  // ... (rest of your component)
+  const GLB_PATH = "/SingleCoinToss.glb";
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handlePlayPause = () => {

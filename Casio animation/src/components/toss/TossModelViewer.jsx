@@ -13,7 +13,7 @@ const RESUME_SPEED = 1;
 const ZOOM_DURATION_S = 1.5;
 
 // --- MODIFIED: Added a fixed end position for the animation ---
-const INITIAL_ZOOM_LEVEL = 3;    
+const INITIAL_ZOOM_LEVEL = 3;
 const STATIC_CAMERA_POSITION = new THREE.Vector3(-2.89, 4.21, 0.06);
 const ANIMATION_END_POSITION = new THREE.Vector3(-0.33, 0.78, -0.05); // Your new position
 
@@ -40,7 +40,14 @@ const CameraPositionTracker = ({ onPositionChange }) => {
 //================================================================//
 //  Model Viewer Component (MODIFIED)
 //================================================================//
-const ModelViewer = ({ url, speed, isAnimating, onAnimationEnd, initialPosition, controlsRef }) => {
+const ModelViewer = ({
+  url,
+  speed,
+  isAnimating,
+  onAnimationEnd,
+  initialPosition,
+  controlsRef,
+}) => {
   const group = useRef();
   const { scene, animations } = useGLTF(url);
   const { actions, mixer } = useAnimations(animations, group);
@@ -71,7 +78,7 @@ const ModelViewer = ({ url, speed, isAnimating, onAnimationEnd, initialPosition,
         duration: 0.75,
         ease: "power2.out",
       });
-      
+
       allActions.forEach((action) => {
         action.reset();
         action.setLoop(THREE.LoopOnce, 1);
@@ -99,7 +106,7 @@ const ModelViewer = ({ url, speed, isAnimating, onAnimationEnd, initialPosition,
               }
             },
           });
-          
+
           allActions.forEach((action) => {
             action.paused = false;
             action.setEffectiveTimeScale(RESUME_SPEED);
@@ -109,7 +116,15 @@ const ModelViewer = ({ url, speed, isAnimating, onAnimationEnd, initialPosition,
       }, STOP_AFTER_MS);
       return () => clearTimeout(stopTimer);
     }
-  }, [actions, isAnimating, speed, camera, initialPosition, onAnimationEnd, controlsRef]);
+  }, [
+    actions,
+    isAnimating,
+    speed,
+    camera,
+    initialPosition,
+    onAnimationEnd,
+    controlsRef,
+  ]);
 
   useEffect(() => {
     if (!mixer || !onAnimationEnd || !isAnimating) return;
@@ -132,8 +147,8 @@ const ModelViewer = ({ url, speed, isAnimating, onAnimationEnd, initialPosition,
 //================================================================//
 const TossModelViewer = () => {
   const controlsRef = useRef();
-  //const glbFiles = ["/head.glb", "/tail.glb"]; 
-  const glbFiles = ["/tail.glb", "/tail.glb"]; 
+  //const glbFiles = ["/head.glb", "/tail.glb"];
+  const glbFiles = ["/tail.glb", "/tail.glb"];
   const [currentFile, setCurrentFile] = useState(glbFiles[0]);
   const [fileName, setFileName] = useState("");
   const [speed, setSpeed] = useState(0.4);
@@ -141,7 +156,9 @@ const TossModelViewer = () => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const getInitialPosition = () => {
-    const pos = STATIC_CAMERA_POSITION.clone().multiplyScalar(1 / INITIAL_ZOOM_LEVEL);
+    const pos = STATIC_CAMERA_POSITION.clone().multiplyScalar(
+      1 / INITIAL_ZOOM_LEVEL
+    );
     return { x: pos.x, y: pos.y, z: pos.z };
   };
 
@@ -153,7 +170,9 @@ const TossModelViewer = () => {
   }, [currentFile]);
 
   const toggleModel = () => {
-    setCurrentFile((prev) => (prev === glbFiles[0] ? glbFiles[1] : glbFiles[0]));
+    setCurrentFile((prev) =>
+      prev === glbFiles[0] ? glbFiles[1] : glbFiles[0]
+    );
     setIsAnimating(false);
   };
 
@@ -165,7 +184,9 @@ const TossModelViewer = () => {
   }, [fileName]);
 
   const handleCopyPosition = () => {
-    const posString = `[${currentCamPos.x.toFixed(2)}, ${currentCamPos.y.toFixed(2)}, ${currentCamPos.z.toFixed(2)}]`;
+    const posString = `[${currentCamPos.x.toFixed(
+      2
+    )}, ${currentCamPos.y.toFixed(2)}, ${currentCamPos.z.toFixed(2)}]`;
     navigator.clipboard.writeText(posString).then(
       () => alert(`Position copied!\n${posString}`),
       () => alert("Failed to copy position.")
@@ -181,7 +202,11 @@ const TossModelViewer = () => {
         backgroundColor: "#282c34",
       }}
     >
-      <Canvas camera={{ position: [initialCamPos.x, initialCamPos.y, initialCamPos.z] }}>
+      <Canvas
+        camera={{
+          position: [initialCamPos.x, initialCamPos.y, initialCamPos.z],
+        }}
+      >
         <ambientLight intensity={0.8} />
         <directionalLight position={[10, 10, 5]} intensity={1} />
         <pointLight position={[-10, -10, -10]} intensity={0.5} />
@@ -192,7 +217,7 @@ const TossModelViewer = () => {
             speed={speed}
             isAnimating={isAnimating}
             onAnimationEnd={handleAnimationEnd}
-            initialPosition={initialCamPos} 
+            initialPosition={initialCamPos}
             controlsRef={controlsRef}
           />
         )}
@@ -233,7 +258,11 @@ const TossModelViewer = () => {
         }}
       >
         <span>
-          {`Camera: [X: ${currentCamPos.x.toFixed(2)}, Y: ${currentCamPos.y.toFixed(2)}, Z: ${currentCamPos.z.toFixed(2)}]`}
+          {`Camera: [X: ${currentCamPos.x.toFixed(
+            2
+          )}, Y: ${currentCamPos.y.toFixed(2)}, Z: ${currentCamPos.z.toFixed(
+            2
+          )}]`}
         </span>
         <button
           onClick={handleCopyPosition}
@@ -295,13 +324,23 @@ const TossModelViewer = () => {
           zIndex: 10,
         }}
       >
-        <button onClick={toggleModel} style={{ padding: "10px", width: "150px" }}>
+        <button
+          onClick={toggleModel}
+          style={{ padding: "10px", width: "150px" }}
+        >
           Toggle Model
         </button>
-        <button onClick={startAnimation} disabled={isAnimating} style={{ padding: "10px", width: "150px" }}>
+        <button
+          onClick={startAnimation}
+          disabled={isAnimating}
+          style={{ padding: "10px", width: "150px" }}
+        >
           {isAnimating ? "Animating..." : "Play Animation"}
         </button>
-        <button onClick={toggleControls} style={{ padding: "10px", width: "150px" }}>
+        <button
+          onClick={toggleControls}
+          style={{ padding: "10px", width: "150px" }}
+        >
           {controlsEnabled ? "Disable Controls" : "Enable Controls"}
         </button>
       </div>

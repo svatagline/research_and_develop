@@ -1,6 +1,8 @@
-import GirlAnimation from "./components/girlAnimation/GirlAnimation";
 // import GirlAnimation from "./components/girlAnimation/GirlAnimationUW";
 // import TossModelViewer from "./components/toss/TossModelViewer";
+
+import TossModelEditing from "./components/toss/TossModelEditing";
+import TossModelViewerRealTime from "./components/toss/TossModelViewerRealTime";
 
 // import CoinTossCasino from "./components/theToss/TheToss";
 
@@ -11,10 +13,11 @@ function App() {
         <h1>Coin Toss Game</h1>
       </header>
       <main>
-      {/* <TossModelViewer />   */}
+        {/* <TossModelViewer />   */}
         {/* <CardDistributionAnimation/> */}
-        <GirlAnimation/>
-   
+        {/* <GirlAnimation/> */}
+        {/* <TossModelViewerRealTime/> */}
+        <TossModelEditing />
       </main>
     </div>
   );
