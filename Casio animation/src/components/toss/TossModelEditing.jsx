@@ -12,48 +12,42 @@ import * as THREE from "three";
 const INITIAL_ANIMATION_PARTS = [
   {
     id: 1,
-    start: 1,
-    end: 7000,
+    start: 2700,
+    end: 5700, // <-- Changed from 2800 to 5700 for testing
     repeats: 1,
-    speed: 0.5,
-    cameraPosition: [0, 3.3, 0],
-    cameraFOV: 50,
-    objectPosition: [-0.1, 1, 0.2],
-    objectRotation: [-0.1, 1.61, -0.3],
+    speed: 0.1,
+    cameraPosition: [-1.65, -0.69, -0.15],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.8, -0.2],
+    objectRotation: [0.13, -0.21, 1.2],
     objectScale: [1, 1, 1],
-    lightPosition: [0, 10, 0],
+    lightPosition: [10, 10, 5],
   },
+
   {
     id: 2,
-    start: 7000,
-    end: 8950,
-    repeats: 1,
+    start: 2801,
+    end: 3150,
+    repeats: 10,
     speed: 0.5,
-    cameraPosition: [0, 1.7, 0],
-    cameraFOV: 50,
-    objectPosition: [0, 0.8, 0.1],
-    objectRotation: [0, 1.7, 0],
+    cameraPosition: [0, -0.57, 2.55],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.8, 0],
+    objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [0, 10, 0],
-  },
-  {
-    id: 3,
-    start: 8950,
-    end: 9000,
-    repeats: 1,
-    speed: 0.03,
-    cameraPosition: [0, 2.1, 0],
-    cameraFOV: 50,
-    objectPosition: [0, 1, 0.2],
-    objectRotation: [-0.1, 1.6, -0.3],
-    objectScale: [1, 1, 1],
-    lightPosition: [0, 10, 0],
+    lightPosition: [10, 10, 5],
   },
 ];
 
-const END_HOLD_TIME_MS = 200; // No longer used for default pose
+const END_HOLD_TIME_MS = 200;
 const ANIMATION_STATE = { INITIAL: "initial", PLAYING: "playing" };
 
+// ----------------------------------------------------------------------
+// --- Model Component ---
+// ----------------------------------------------------------------------
+// ----------------------------------------------------------------------
+// --- Model Component ---
+// ----------------------------------------------------------------------
 function Model({
   modelPath,
   onReady,
@@ -115,20 +109,9 @@ function Model({
     allActions.forEach((action) => {
       action.loop = THREE.LoopOnce;
       action.clampWhenFinished = true;
-      // --- MODIFICATION START ---
-      // Set initial time for all actions to render the desired starting pose
-      action.time = END_HOLD_TIME_MS / 1000;
-      action.play(); // Play and pause to apply the time
-      action.paused = true;
-      // --- MODIFICATION END ---
     });
 
-    // --- MODIFICATION START ---
-    // Update the mixer once with a delta of 0 to apply the pose immediately
-    if (mixer) {
-      mixer.update(0);
-    }
-    // --- MODIFICATION END ---
+    masterAction.time = END_HOLD_TIME_MS / 1000;
 
     onReady?.();
 
@@ -147,10 +130,6 @@ function Model({
       stopPlay: () => {
         allActions.forEach((action) => {
           action.paused = true;
-          // --- MODIFICATION START ---
-          // When stopping, reset to the 200ms pose
-          action.time = END_HOLD_TIME_MS / 1000;
-          // --- MODIFICATION END ---
         });
         setAndReportSequenceState(ANIMATION_STATE.INITIAL);
       },
@@ -167,7 +146,6 @@ function Model({
     onReady,
     setAndReportSequenceState,
     animationParts,
-    mixer, // <-- Added mixer dependency
   ]);
 
   useFrame((state, delta) => {
@@ -267,13 +245,9 @@ function Model({
         } else {
           // --- STOP LOGIC ---
           setAndReportSequenceState(ANIMATION_STATE.INITIAL);
-          allActions.forEach((action) => {
-            // --- MODIFICATION START ---
-            // When animation ends, reset to the 200ms pose
-            action.time = END_HOLD_TIME_MS / 1000;
-            action.paused = true; // Ensure it's paused
-            // --- MODIFICATION END ---
-          });
+          allActions.forEach(
+            (action) => (action.time = END_HOLD_TIME_MS / 1000)
+          );
         }
       }
     }
@@ -313,11 +287,8 @@ const InfoDisplay = ({ label, value }) => {
   const formattedValue = Array.isArray(value)
     ? value.map((v) => v.toFixed(2)).join(", ")
     : "N/A";
-  const handleCopy = () => {
-    if (Array.isArray(value)) {
-      navigator.clipboard.writeText(`[${value.join(", ")}]`);
-    }
-  };
+  const handleCopy = () =>
+    navigator.clipboard.writeText(`[${value.join(", ")}]`);
   return (
     <div
       style={{
@@ -426,7 +397,7 @@ const NumberInput = ({ label, value, onChange, step = 1, min, max }) => (
 // --- Main Viewer Component ---
 // ----------------------------------------------------------------------
 export default function TossModelEditing() {
-  const GLB_PATH = "SingleCoinToss.glb";
+  const GLB_PATH = "/SingleCoinToss.glb";
   const [isReady, setIsReady] = useState(false);
   const [isUserControllingCamera, setIsUserControllingCamera] = useState(false);
   const [animationParts, setAnimationParts] = useState(INITIAL_ANIMATION_PARTS);
@@ -471,26 +442,84 @@ export default function TossModelEditing() {
   const selectedPart = animationParts[selectedPartIndex];
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        width: "100vw",
-        height: "100vh",
-        fontFamily: "sans-serif",
-      }}
-    >
+    <div>
+      <div
+        style={{
+          display: "flex",
+          width: "90vw",
+          aspectRatio: "2.23",
+          alignItems: "center",
+          justifyContent: "space-around",
+          border: "solid red 2px",
+        }}
+      >
+        {/* CANVAS CONTAINER */}
+        <Canvas>
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[-10, -10, -5]} intensity={0.5} />
+          <Model
+            modelPath={GLB_PATH}
+            onReady={handleModelReady}
+            onStateUpdate={handleStateUpdate}
+            isUserControllingCamera={isUserControllingCamera}
+            animationParts={animationParts}
+            isObjectLocked={isObjectLocked}
+            setIsDraggingObject={setIsDraggingObject}
+            handlePartUpdate={handlePartUpdate}
+            transformMode={transformMode}
+            onPlaybackStateChange={setIsPlaying}
+          />
+          <OrbitControls
+            enabled={!isDraggingObject}
+            onStart={() => setIsUserControllingCamera(true)}
+            onEnd={() => setIsUserControllingCamera(false)}
+          />
+        </Canvas>
+        <div style={{ position: "absolute", bottom: "0", right: "0" }}>
+          {isPlaying ? (
+            <button
+              onClick={handleStopButtonClick}
+              style={{
+                fontSize: "16px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: "pointer",
+                backgroundColor: "#DC143C",
+                color: "white",
+              }}
+            >
+              ⏹️
+            </button>
+          ) : (
+            <button
+              onClick={handlePlayButtonClick}
+              disabled={!isReady}
+              style={{
+                fontSize: "16px",
+                border: "none",
+                borderRadius: "5px",
+                cursor: isReady ? "pointer" : "not-allowed",
+                backgroundColor: isReady ? "#4CAF50" : "#888",
+                color: "white",
+              }}
+            >
+              {isReady ? "▶️" : "..."}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* LEFT CONTROL PANEL */}
       <div
         style={{
           width: "350px",
-          height: "100vh",
+          height: "200px",
           padding: "15px",
           backgroundColor: "#282c34",
           color: "white",
           overflowY: "auto",
           flexShrink: 0,
-          boxSizing: "border-box",
+          fontFamily: "sans-serif",
         }}
       >
         <h3
@@ -517,7 +546,6 @@ export default function TossModelEditing() {
               color: "white",
               border: "1px solid #555",
               borderRadius: "3px",
-              boxSizing: "border-box",
             }}
           >
             {animationParts.map((part, index) => (
@@ -716,71 +744,6 @@ export default function TossModelEditing() {
               }}
             >
               {isReady ? "▶️ Run Sequence" : "Loading..."}
-            </button>
-          )}
-        </div>
-      </div>
-      {/* CANVAS CONTAINER */}
-      <div
-        style={{
-          flex: 1,
-          height: "100vh",
-          position: "relative",
-          backgroundColor: "#1c1c1c",
-        }}
-      >
-        <Canvas>
-          <ambientLight intensity={0.8} />
-          <directionalLight position={[-10, -10, -5]} intensity={0.5} />
-          <Model
-            modelPath={GLB_PATH}
-            onReady={handleModelReady}
-            onStateUpdate={handleStateUpdate}
-            isUserControllingCamera={isUserControllingCamera}
-            animationParts={animationParts}
-            isObjectLocked={isObjectLocked}
-            setIsDraggingObject={setIsDraggingObject}
-            handlePartUpdate={handlePartUpdate}
-            transformMode={transformMode}
-            onPlaybackStateChange={setIsPlaying}
-          />
-          <OrbitControls
-            enabled={!isDraggingObject}
-            onStart={() => setIsUserControllingCamera(true)}
-            onEnd={() => setIsUserControllingCamera(false)}
-          />
-        </Canvas>
-        <div style={{ position: "absolute", bottom: "10px", right: "10px" }}>
-          {isPlaying ? (
-            <button
-              onClick={handleStopButtonClick}
-              style={{
-                fontSize: "20px",
-                padding: "8px 12px",
-                border: "none",
-                borderRadius: "5px",
-                cursor: "pointer",
-                backgroundColor: "#DC143C",
-                color: "white",
-              }}
-            >
-              ⏹️
-            </button>
-          ) : (
-            <button
-              onClick={handlePlayButtonClick}
-              disabled={!isReady}
-              style={{
-                fontSize: "20px",
-                padding: "8px 12px",
-                border: "none",
-                borderRadius: "5px",
-                cursor: isReady ? "pointer" : "not-allowed",
-                backgroundColor: isReady ? "#4CAF50" : "#888",
-                color: "white",
-              }}
-            >
-              {isReady ? "▶️" : "..."}
             </button>
           )}
         </div>

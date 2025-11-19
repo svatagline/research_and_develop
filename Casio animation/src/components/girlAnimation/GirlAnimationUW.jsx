@@ -10,59 +10,59 @@ import * as THREE from "three";
 
 // --- INITIAL ANIMATION CONFIGURATION ---
 const INITIAL_ANIMATION_PARTS = [
-  // {
-  //   id: 1,
-  //   start: 2700,
-  //   end: 5700, // <-- Changed from 2800 to 5700 for testing
-  //   repeats: 1,
-  //   speed: 0.1,
-  //   cameraPosition: [0, -0.57, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 10, 5],
-  // },
- 
-  // {
-  //   id: 2,
-  //   start: 2801,
-  //   end: 3150,
-  //   repeats: 10,
-  //   speed: 0.5,
-  //   cameraPosition: [0, -0.57, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 10, 5],
-  // },
-  // {
-  //   id: 3,
-  //   start: 3050,
-  //   end: 3080,
-  //   repeats: 1,
-  //   speed: 0.02,
-  //   cameraPosition: [-0.15, 0.15, 0.09],
-  //   cameraFOV: 50,
-  //   objectPosition: [-0.1, 0, -0.1],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [0, 10, 0],
-  // },
-  // {
-  //   id: 4,
-  //   start: 3080,
-  //   end: 4005,
-  //   repeats: 1,
-  //   speed: 0.2,
-  //   cameraPosition: [0, 1.1, 0.1],
-  //   cameraFOV: 50,
-  //   objectPosition: [-0.1, 0, -0.1],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [0, 10, 0],
-  // },
+  {
+    id: 1,
+    start: 2700,
+    end: 5700, // <-- Changed from 2800 to 5700 for testing
+    repeats: 1,
+    speed: 0.1,
+    cameraPosition: [0, -0.57, 2.55],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.8, 0],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 5],
+  },
+
+  {
+    id: 2,
+    start: 2801,
+    end: 3150,
+    repeats: 10,
+    speed: 0.5,
+    cameraPosition: [0, -0.57, 2.55],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.8, 0],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 5],
+  },
+  {
+    id: 3,
+    start: 3050,
+    end: 3080,
+    repeats: 1,
+    speed: 0.02,
+    cameraPosition: [-0.15, 0.15, 0.09],
+    cameraFOV: 50,
+    objectPosition: [-0.1, 0, -0.1],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [0, 10, 0],
+  },
+  {
+    id: 4,
+    start: 3080,
+    end: 4005,
+    repeats: 1,
+    speed: 0.2,
+    cameraPosition: [0, 1.1, 0.1],
+    cameraFOV: 50,
+    objectPosition: [-0.1, 0, -0.1],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [0, 10, 0],
+  },
   {
     id: 5,
     start: 4005,
@@ -142,8 +142,7 @@ function Model({
     group.current.position.set(...initialPart.objectPosition);
     group.current.rotation.set(...initialPart.objectRotation);
     group.current.scale.set(...(initialPart.objectScale || [1, 1, 1]));
-    if (light.current)
-      light.current.position.set(...initialPart.lightPosition);
+    if (light.current) light.current.position.set(...initialPart.lightPosition);
     camera.updateProjectionMatrix();
 
     allActions.forEach((action) => {
@@ -270,8 +269,8 @@ function Model({
             action.paused = false; // <-- THE FIX
             action.play(); // <-- THE FIX
           });
-        // --- ✨ TRANSITION LOGIC FIX ---
-        // This logic also fully resets all animation tracks
+          // --- ✨ TRANSITION LOGIC FIX ---
+          // This logic also fully resets all animation tracks
         } else if (!isLastPartInConfig) {
           const nextPartIndex = currentPartIndex + 1;
           setCurrentPartIndex(nextPartIndex);
@@ -327,7 +326,8 @@ const InfoDisplay = ({ label, value }) => {
   const formattedValue = Array.isArray(value)
     ? value.map((v) => v.toFixed(2)).join(", ")
     : "N/A";
-  const handleCopy = () => navigator.clipboard.writeText(`[${value.join(", ")}]`);
+  const handleCopy = () =>
+    navigator.clipboard.writeText(`[${value.join(", ")}]`);
   return (
     <div
       style={{
@@ -436,7 +436,7 @@ const NumberInput = ({ label, value, onChange, step = 1, min, max }) => (
 // --- Main Viewer Component ---
 // ----------------------------------------------------------------------
 export default function ModelViewer() {
-  const GLB_PATH = "girlAnimation/2D ANIMATION1.glb";
+  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
   const [isReady, setIsReady] = useState(false);
   const [isUserControllingCamera, setIsUserControllingCamera] = useState(false);
   const [animationParts, setAnimationParts] = useState(INITIAL_ANIMATION_PARTS);
