@@ -1,129 +1,243 @@
-import React, { useState, useEffect, useRef } from "react";
+import { OrbitControls, useAnimations, useGLTF } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF, useAnimations, OrbitControls } from "@react-three/drei";
+// --- BLINK: Import useState ---
+import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
-// --- 1. INITIAL CONFIGURATION ---
-const GLB_PATH = "/SingleCoinToss.glb";
-
-const INITIAL_CONFIG = [
+// --- ANIMATION CONFIGURATION ---
+// (Your configuration remains the same)
+const ANIMATION_PARTS = [
   {
     id: 1,
-    range: [0.0, 2.0],
+    start: 0,
+    end: 1000,
     repeats: 1,
-    speed: 0.5,
-    objectPosition: [-1.4, 0, 0],
-    cameraConfig: { position: [-3.5, 6.3, -0.18], fov: 15 },
+    speed: 0.05,
+    cameraPosition: [-1.65, -0.69, -0.15],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.85, -0.2],
+    objectRotation: [0.04, -0.21, 1.2],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 5],
   },
+
   {
     id: 2,
-    range: [2.0, 5],
-    repeats: 1,
+    start: 1000,
+    end: 4000,
+    repeats: 10,
     speed: 0.5,
-    objectPosition: [-1.4, 0, 0],
-    cameraConfig: { position: [-3.5, 6.3, -0.18], fov: 15 },
+    cameraPosition: [-1.65, -0.69, -0.15],
+    cameraFOV: 40,
+    objectPosition: [-0.2, -0.85, -0.2],
+    objectRotation: [0.04, -0.21, 1.2],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 5],
   },
 ];
 
-// --- 2. CAMERA HANDLER ---
-const CameraHandler = ({ config }) => {
+// --- Model Component ---
+function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
+  const group = useRef();
+  const light = useRef();
+  const { scene, animations } = useGLTF(modelPath);
+
+  const { actions, mixer } = useAnimations(animations || [], group);
   const { camera } = useThree();
 
+  // Internal state for managing the sequence
+  const [currentPartIndex, setCurrentPartIndex] = useState(0);
+  const [currentPartRepeats, setCurrentPartRepeats] = useState(0);
+
+  // --- BLINK: State to hold the eyelid mesh ---
+  const [eyelidMesh, setEyelidMesh] = useState(null);
+
+  // Fix for skinned mesh position AND find the eyelid
   useEffect(() => {
-    if (!config) return;
+    if (scene) {
+      let foundEyelid = null;
+      scene.traverse((object) => {
+        // Skinned mesh fix
+        if (object.isSkinnedMesh) {
+          object.bind(object.skeleton, object.bindMatrix);
+          object.skeleton.pose();
+        }
 
-    // console.log("📸 Updating Camera:", config.position);
-
-    // Update Position
-    camera.position.set(
-      config.position[0],
-      config.position[1],
-      config.position[2]
-    );
-
-    // Update FOV
-    camera.fov = config.fov;
-    camera.updateProjectionMatrix();
-  }, [config]); // Dependency ensures update when State Reference changes
-
-  return null;
-};
-
-// --- 3. MODEL COMPONENT ---
-const Model = ({
-  url,
-  isPlaying,
-  setIsPlaying,
-  partIndex,
-  setPartIndex,
-  config,
-  allParts,
-}) => {
-  const group = useRef();
-  const { scene, animations } = useGLTF(url);
-  const { actions, names } = useAnimations(animations, group);
-
-  const loopCounter = useRef(0);
-  const masterActionName = useRef(null);
-
-  // A. INIT
-  useEffect(() => {
-    if (names.length === 0) return;
-    let longestDuration = 0;
-    let longestName = names[0];
-
-    names.forEach((name) => {
-      const clip = animations.find((a) => a.name === name);
-      if (clip.duration > longestDuration) {
-        longestDuration = clip.duration;
-        longestName = name;
-      }
-      const action = actions[name];
-      action.reset().play();
-      action.paused = true;
-    });
-    masterActionName.current = longestName;
-    if (actions[longestName]) actions[longestName].time = allParts[0].range[0];
-  }, [names, actions, animations, allParts]);
-
-  // B. PLAY/PAUSE
-  useEffect(() => {
-    names.forEach((name) => {
-      if (actions[name]) actions[name].paused = !isPlaying;
-    });
-  }, [isPlaying, actions, names]);
-
-  // C. PART SWITCH
-  useEffect(() => {
-    if (config) {
-      loopCounter.current = 0;
-      names.forEach((name) => {
-        if (actions[name]) actions[name].time = config.range[0];
+        // --- BLINK: Find the mesh by its name from Blender ---
+        // --- FIX: We search for *any* object (Mesh, Group, etc.) ---
+        // We also only find the *first* one to avoid conflicts
+        if (!foundEyelid && object.name === "eyelid") {
+          console.log("Found eyelid object:", object);
+          foundEyelid = object;
+          // --- BLINK: Start with the eyelid hidden ---
+          object.visible = false;
+        }
       });
-    }
-  }, [partIndex, actions, names]);
 
-  // D. GAME LOOP
-  useFrame(() => {
-    if (!masterActionName.current || !isPlaying || !config) return;
-    const driver = actions[masterActionName.current];
-    names.forEach((name) => {
-      if (actions[name]) actions[name].timeScale = config.speed;
+      if (foundEyelid) {
+        setEyelidMesh(foundEyelid);
+      } else {
+        console.warn(
+          "Could not find mesh with name 'eyelid'. Blink animation will not play."
+        );
+      }
+    }
+  }, [scene]);
+
+  // This effect runs once to set up the scene and animations
+  useEffect(() => {
+    if (!actions || !mixer) return;
+
+    const allActions = Object.values(actions).filter((action) => action);
+    if (allActions.length === 0) return;
+
+    // --- Initial Scene Setup (Camera, Model Position, etc.) ---
+    const initialPart = animationParts[0];
+    camera.position.set(...initialPart.cameraPosition);
+    camera.fov = initialPart.cameraFOV;
+    if (group.current) {
+      group.current.position.set(...initialPart.objectPosition);
+      group.current.rotation.set(...initialPart.objectRotation);
+      group.current.scale.set(...(initialPart.objectScale || [1, 1, 1]));
+    }
+    if (light.current) {
+      light.current.position.set(...initialPart.lightPosition);
+    }
+    camera.updateProjectionMatrix();
+
+    // Setup all actions
+    allActions.forEach((action) => {
+      action.loop = THREE.LoopOnce;
+      action.clampWhenFinished = true;
+      action.time = animationParts[0].start / 1000;
+      action.play().paused = true;
     });
 
-    if (driver.time >= config.range[1]) {
-      if (loopCounter.current < config.repeats - 1) {
-        loopCounter.current += 1;
-        names.forEach((name) => (actions[name].time = config.range[0]));
-      } else {
-        const nextIndex = partIndex + 1;
-        if (nextIndex < allParts.length) {
-          setPartIndex(nextIndex);
+    // Reset sequence state
+    setCurrentPartIndex(0);
+    setCurrentPartRepeats(0);
+  }, [actions, mixer, camera, animationParts]);
+
+  // This effect reacts to the play/pause button toggle
+  useEffect(() => {
+    if (!actions) return;
+    const allActions = Object.values(actions).filter((action) => action);
+    allActions.forEach((action) => {
+      action.paused = !isPlaying;
+    });
+  }, [isPlaying, actions]);
+
+  // This is the core update loop
+  useFrame((state, delta) => {
+    if (!actions || !mixer) return;
+
+    const allActions = Object.values(actions).filter((action) => action);
+    const masterAction = allActions[0];
+    if (!masterAction) return;
+
+    const currentPart = animationParts[currentPartIndex];
+    if (!currentPart) return;
+
+    // Control speed via mixer.timeScale
+    mixer.timeScale = isPlaying ? currentPart.speed : 0;
+    mixer.update(delta);
+
+    // --- Camera/Object Lerping ---
+    const interpolationFactor = 0.05;
+    camera.position.lerp(
+      new THREE.Vector3(...currentPart.cameraPosition),
+      interpolationFactor
+    );
+    camera.fov += (currentPart.cameraFOV - camera.fov) * interpolationFactor;
+    camera.updateProjectionMatrix();
+    if (light.current) {
+      light.current.position.lerp(
+        new THREE.Vector3(...currentPart.lightPosition),
+        interpolationFactor
+      );
+    }
+    if (group.current) {
+      group.current.position.lerp(
+        new THREE.Vector3(...currentPart.objectPosition),
+        interpolationFactor
+      );
+      const targetRotation = new THREE.Quaternion().setFromEuler(
+        new THREE.Euler(...currentPart.objectRotation)
+      );
+      group.current.quaternion.slerp(targetRotation, interpolationFactor);
+      const targetScale = new THREE.Vector3(
+        ...(currentPart.objectScale || [1, 1, 1])
+      );
+      group.current.scale.lerp(targetScale, interpolationFactor);
+    }
+    // --- End Lerping ---
+
+    // Only run the sequencing logic if we are playing
+    if (isPlaying) {
+      const currentTimeMs = masterAction.time * 1000;
+      const segmentEndMs = currentPart.end;
+      const isLastPartInConfig = currentPartIndex === animationParts.length - 1;
+
+      // --- BLINK: LOGIC START ---
+      // NEW LOGIC: Tie visibility to the current animation part ID
+      console.log("test1 currentPart.id", currentPart.id);
+      if (eyelidMesh) {
+        const animTimeSec = masterAction.time; // This is the time in seconds
+
+        // --- Priority 1: Force SHOW period (2700ms to 3150ms) ---
+        // We check the ID of the current part, which is more reliable than time.
+        // Your animation part with id: 2 is the 2700-3150ms segment.
+        if (currentPart.id === 2) {
+          // If we are in the forced-SHOW period, it's always true (visible).
+          eyelidMesh.visible = true;
         } else {
-          setIsPlaying(false);
-          names.forEach((name) => {
-            actions[name].paused = true;
-            actions[name].time = config.range[1];
+          // --- Priority 2: Repeating blink (only if NOT in part 2) ---
+          // This logic now only runs when we are outside the 2700-3150ms window.
+          const cycleDuration = 2.0;
+          const blinkDuration = 0.02;
+          const timeInCycle = animTimeSec % cycleDuration;
+          const isRepeatingBlink = timeInCycle < blinkDuration;
+
+          eyelidMesh.visible = isRepeatingBlink;
+        }
+      }
+      // --- BLINK: LOGIC END ---
+
+      // Check if we've reached the end of the current part
+      if (currentTimeMs >= segmentEndMs) {
+        // --- REPEAT LOGIC ---
+        if (currentPartRepeats < currentPart.repeats - 1) {
+          setCurrentPartRepeats((prev) => prev + 1);
+          allActions.forEach((action) => {
+            action.reset();
+            action.time = currentPart.start / 1000;
+            action.paused = false;
+            action.play();
+          });
+        }
+        // --- TRANSITION LOGIC ---
+        else if (!isLastPartInConfig) {
+          const nextPartIndex = currentPartIndex + 1;
+          setCurrentPartIndex(nextPartIndex);
+          setCurrentPartRepeats(0);
+          allActions.forEach((action) => {
+            action.reset();
+            action.time = animationParts[nextPartIndex].start / 1000;
+            action.paused = false;
+            action.play();
+          });
+        }
+        // --- STOP LOGIC ---
+        else {
+          // End of the entire sequence
+          setIsPlaying(false); // Tell the parent App to stop
+          // Reset state for the next time 'Play' is clicked
+          setCurrentPartIndex(0);
+          setCurrentPartRepeats(0);
+          // --- BLINK: Hide eyelid when animation stops ---
+          if (eyelidMesh) eyelidMesh.visible = false;
+          allActions.forEach((action) => {
+            action.time = animationParts[0].start / 1000;
           });
         }
       }
@@ -131,268 +245,103 @@ const Model = ({
   });
 
   return (
-    <primitive
-      ref={group}
-      object={scene}
-      scale={2}
-      position={config.objectPosition}
-    />
+    <>
+      <directionalLight ref={light} intensity={1.5} />
+      <primitive object={scene} ref={group} dispose={null} />
+    </>
   );
-};
+}
 
-// --- 4. MAIN COMPONENT ---
-const AnimationPlayer = () => {
-  const [animationParts, setAnimationParts] = useState(INITIAL_CONFIG);
+// ----------------------------------------------------------------------
+// --- Main App Component --- (DESIGN AND TYPO FIXES)
+// ----------------------------------------------------------------------
+export default function TossModelViewerRealTime() {
+  // --- IMPORTANT ---
+  // Replace this with the correct path to your GLB file
+  const GLB_PATH = "/SingleCoinToss.glb";
   const [isPlaying, setIsPlaying] = useState(false);
-  const [partIndex, setPartIndex] = useState(0);
 
-  // --- FIX: DEEP COPY UPDATE LOGIC ---
-  const updateConfig = (field, subField, value, index = 0) => {
-    setAnimationParts((prevParts) => {
-      // 1. Deep Clone the Array
-      const newParts = [...prevParts];
-
-      // 2. Deep Clone the Active Part
-      const activePart = {
-        ...newParts[partIndex],
-        cameraConfig: { ...newParts[partIndex].cameraConfig }, // Clone Camera Object
-        objectPosition: [...newParts[partIndex].objectPosition], // Clone Object Position Array
-      };
-
-      if (field === "cameraConfig") {
-        if (subField === "position") {
-          // Clone the position array specifically
-          const newPos = [...activePart.cameraConfig.position];
-          newPos[index] = parseFloat(value);
-          activePart.cameraConfig.position = newPos;
-        } else {
-          activePart.cameraConfig[subField] = parseFloat(value);
-        }
-      } else if (field === "objectPosition") {
-        activePart.objectPosition[index] = parseFloat(value);
-      }
-
-      newParts[partIndex] = activePart;
-      return newParts; // Return NEW reference, triggering re-render
-    });
-  };
-
-  const currentConfig = animationParts[partIndex];
-
-  const handleTogglePlay = () => {
-    if (!isPlaying && partIndex === animationParts.length - 1) {
-      setPartIndex(0);
-      setIsPlaying(true);
-    } else {
-      setIsPlaying(!isPlaying);
-    }
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
   };
 
   return (
-    <div style={styles.pageWrapper}>
-      <div style={styles.playerContainer}>
-        <div style={styles.canvasWrapper}>
-          <Canvas>
-            <ambientLight intensity={2} />
-            <directionalLight position={[5, 10, 5]} intensity={1} />
-
+    <div
+      style={{
+        width: "100vw", // <-- Fixed typo, was "10Svw"
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        fontFamily: "'Inter', sans-serif", // Using a cleaner font
+        background: "#111827", // Dark blue-gray background
+        color: "white",
+        padding: "20px",
+        boxSizing: "border-box", // Ensures padding doesn't break layout
+      }}
+    >
+      <h1 style={{ fontWeight: 600, fontSize: "28px", margin: "0 0 16px 0" }}>
+        Animation Preview
+      </h1>
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "1000px", // Set a max width for large screens
+          height: "70vh", // Use viewport height
+          background: "#1F2937", // Lighter gray background for canvas
+          borderRadius: "16px", // Rounded corners
+          overflow: "hidden", // Ensures canvas stays inside border
+          boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
+        }}
+      >
+        {/* --- FIX: Re-added the missing Canvas block --- */}
+        <Canvas>
+          <ambientLight intensity={0.8} />
+          <Suspense fallback={null}>
             <Model
-              url={GLB_PATH}
+              modelPath={GLB_PATH}
+              animationParts={ANIMATION_PARTS}
               isPlaying={isPlaying}
               setIsPlaying={setIsPlaying}
-              partIndex={partIndex}
-              setPartIndex={setPartIndex}
-              config={currentConfig}
-              allParts={animationParts}
             />
-
-            <CameraHandler config={currentConfig.cameraConfig} />
-            <OrbitControls makeDefault />
-          </Canvas>
-        </div>
-
-        <div style={styles.controlsOverlay}>
-          <button onClick={handleTogglePlay} style={styles.playButton}>
-            {partIndex === animationParts.length - 1 && !isPlaying
-              ? "REPLAY ↻"
-              : isPlaying
-              ? "PAUSE ⏸"
-              : "PLAY ▶"}
-          </button>
-          <div style={styles.badge}>Active: Part {partIndex + 1}</div>
-        </div>
+          </Suspense>
+          <OrbitControls />
+        </Canvas>
       </div>
-
-      {/* FORM UI */}
-      <div style={styles.formContainer}>
-        <h3>⚙️ Config (Part {partIndex + 1})</h3>
-
-        <div style={styles.section}>
-          <h4>📷 Camera Position</h4>
-          <div style={styles.row}>
-            <label>X:</label>
-            <input
-              type="number"
-              step="0.5"
-              value={currentConfig.cameraConfig.position[0]}
-              onChange={(e) =>
-                updateConfig("cameraConfig", "position", e.target.value, 0)
-              }
-            />
-          </div>
-          <div style={styles.row}>
-            <label>Y:</label>
-            <input
-              type="number"
-              step="0.5"
-              value={currentConfig.cameraConfig.position[1]}
-              onChange={(e) =>
-                updateConfig("cameraConfig", "position", e.target.value, 1)
-              }
-            />
-          </div>
-          <div style={styles.row}>
-            <label>Z:</label>
-            <input
-              type="number"
-              step="0.5"
-              value={currentConfig.cameraConfig.position[2]}
-              onChange={(e) =>
-                updateConfig("cameraConfig", "position", e.target.value, 2)
-              }
-            />
-          </div>
-
-          <h4>👁 Camera FOV</h4>
-          <div style={styles.row}>
-            <input
-              type="range"
-              min="10"
-              max="100"
-              value={currentConfig.cameraConfig.fov}
-              onChange={(e) =>
-                updateConfig("cameraConfig", "fov", e.target.value)
-              }
-            />
-            <span>{currentConfig.cameraConfig.fov}</span>
-          </div>
-        </div>
-
-        <hr style={{ borderColor: "#ddd", margin: "15px 0" }} />
-
-        <div style={styles.section}>
-          <h4>📦 Object Position</h4>
-          <div style={styles.row}>
-            <label>X:</label>
-            <input
-              type="number"
-              step="0.1"
-              value={currentConfig.objectPosition[0]}
-              onChange={(e) =>
-                updateConfig("objectPosition", null, e.target.value, 0)
-              }
-            />
-          </div>
-          <div style={styles.row}>
-            <label>Y:</label>
-            <input
-              type="number"
-              step="0.1"
-              value={currentConfig.objectPosition[1]}
-              onChange={(e) =>
-                updateConfig("objectPosition", null, e.target.value, 1)
-              }
-            />
-          </div>
-          <div style={styles.row}>
-            <label>Z:</label>
-            <input
-              type="number"
-              step="0.1"
-              value={currentConfig.objectPosition[2]}
-              onChange={(e) =>
-                updateConfig("objectPosition", null, e.target.value, 2)
-              }
-            />
-          </div>
-        </div>
-      </div>
+      {/* --- FIX: Moved the button to be *after* the canvas div --- */}
+      <button
+        onClick={handlePlayPause}
+        style={{
+          fontSize: "20px",
+          fontWeight: 600,
+          padding: "12px 24px",
+          marginTop: "24px",
+          cursor: "pointer",
+          borderRadius: "12px",
+          border: "none",
+          background: isPlaying
+            ? "linear-gradient(145deg, #e63946, #c32f3b)"
+            : "linear-gradient(145deg, #52b788, #40916c)",
+          color: "white",
+          minWidth: "150px",
+          boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
+          transition: "transform 0.1s ease, box-shadow 0.1s ease",
+        }}
+        // Add hover and active states inline for simplicity
+        onMouseOver={(e) => {
+          e.currentTarget.style.transform = "scale(1.03)";
+          e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
+        }}
+        onMouseOut={(e) => {
+          e.currentTarget.style.transform = "scale(1)";
+          e.currentTarget.style.boxShadow = "0 4px 15px rgba(0, 0, 0, 0.2)";
+        }}
+        onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.98)")}
+        onMouseUp={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
+      >
+        {isPlaying ? "Pause ⏸" : "Play ▶"}
+      </button>
     </div>
   );
-};
-
-const styles = {
-  pageWrapper: {
-    display: "flex",
-    flexWrap: "wrap",
-    gap: "20px",
-    width: "100vw",
-    margin: "20px auto",
-    fontFamily: "sans-serif",
-  },
-  playerContainer: {
-    flex: "2 1 1600px",
-    position: "relative",
-    aspectRatio: "2 / 1",
-    backgroundColor: "#ccc",
-    borderRadius: "12px",
-    overflow: "hidden",
-    border: "1px solid #999",
-  },
-  canvasWrapper: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    width: "100%",
-    height: "100%",
-  },
-  controlsOverlay: {
-    position: "absolute",
-    bottom: "20px",
-    width: "100%",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "10px",
-    zIndex: 10,
-    pointerEvents: "none",
-  },
-  playButton: {
-    pointerEvents: "auto",
-    padding: "10px 30px",
-    fontSize: "16px",
-    fontWeight: "bold",
-    color: "white",
-    backgroundColor: "#222",
-    border: "2px solid #555",
-    borderRadius: "30px",
-    cursor: "pointer",
-    minWidth: "140px",
-  },
-  badge: {
-    color: "#000",
-    fontSize: "12px",
-    fontWeight: "bold",
-    background: "rgba(255,255,255,0.5)",
-    padding: "4px 8px",
-    borderRadius: "4px",
-  },
-  formContainer: {
-    flex: "1 1 300px",
-    backgroundColor: "#f9f9f9",
-    padding: "20px",
-    borderRadius: "12px",
-    border: "1px solid #ddd",
-    maxHeight: "450px",
-    overflowY: "auto",
-  },
-  section: { marginBottom: "10px" },
-  row: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    marginBottom: "8px",
-  },
-};
-
-export default AnimationPlayer;
+}

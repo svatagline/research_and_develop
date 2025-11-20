@@ -232,13 +232,13 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 
       // --- BLINK: LOGIC START ---
       // NEW LOGIC: Tie visibility to the current animation part ID
+      console.log("test1 currentPart.id", currentPart.id);
       if (eyelidMesh) {
         const animTimeSec = masterAction.time; // This is the time in seconds
 
         // --- Priority 1: Force SHOW period (2700ms to 3150ms) ---
         // We check the ID of the current part, which is more reliable than time.
         // Your animation part with id: 2 is the 2700-3150ms segment.
-        console.log("test1 currentPart.id", currentPart.id);
         if (currentPart.id === 2) {
           // If we are in the forced-SHOW period, it's always true (visible).
           eyelidMesh.visible = true;
