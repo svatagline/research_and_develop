@@ -5,14 +5,13 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 // --- ANIMATION CONFIGURATION ---
-// (Your configuration remains the same)
 const ANIMATION_PARTS = [
   {
     id: 0,
     start: 0,
     end: 1500,
     repeats: 1,
-    speed: 0.1,
+    speed: 0.05,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
@@ -59,7 +58,6 @@ const ANIMATION_PARTS = [
     objectScale: [1, 1, 1],
     lightPosition: [10, 10, 5],
   },
-
   {
     id: 4,
     start: 3261,
@@ -101,8 +99,14 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
   const [currentPartIndex, setCurrentPartIndex] = useState(0);
   const [currentPartRepeats, setCurrentPartRepeats] = useState(0);
 
-  // --- BLINK: State to hold the eyelid mesh ---
+  // State to hold the eyelid mesh
   const [eyelidMesh, setEyelidMesh] = useState(null);
+
+  // Helper to get all valid actions
+  const allActions = actions
+    ? Object.values(actions).filter((action) => action)
+    : [];
+  const masterAction = allActions.length > 0 ? allActions[0] : null;
 
   // Fix for skinned mesh position AND find the eyelid
   useEffect(() => {
@@ -115,13 +119,10 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           object.skeleton.pose();
         }
 
-        // --- BLINK: Find the mesh by its name from Blender ---
-        // --- FIX: We search for *any* object (Mesh, Group, etc.) ---
-        // We also only find the *first* one to avoid conflicts
+        // Find the eyelid mesh
         if (!foundEyelid && object.name === "eyelid") {
           console.log("Found eyelid object:", object);
           foundEyelid = object;
-          // --- BLINK: Start with the eyelid hidden ---
           object.visible = false;
         }
       });
@@ -138,13 +139,11 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 
   // This effect runs once to set up the scene and animations
   useEffect(() => {
-    if (!actions || !mixer) return;
+    if (!masterAction) return;
 
-    const allActions = Object.values(actions).filter((action) => action);
-    if (allActions.length === 0) return;
+    const initialPart = animationParts[0];
 
     // --- Initial Scene Setup (Camera, Model Position, etc.) ---
-    const initialPart = animationParts[0];
     camera.position.set(...initialPart.cameraPosition);
     camera.fov = initialPart.cameraFOV;
     if (group.current) {
@@ -161,38 +160,44 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
     allActions.forEach((action) => {
       action.loop = THREE.LoopOnce;
       action.clampWhenFinished = true;
-      action.time = animationParts[0].start / 1000;
+      // CRITICAL: Set initial time based on config
+      action.time = initialPart.start / 1000;
       action.play().paused = true;
     });
 
     // Reset sequence state
     setCurrentPartIndex(0);
     setCurrentPartRepeats(0);
-  }, [actions, mixer, camera, animationParts]);
+  }, [masterAction, camera, animationParts]);
 
   // This effect reacts to the play/pause button toggle
   useEffect(() => {
-    if (!actions) return;
-    const allActions = Object.values(actions).filter((action) => action);
+    if (!masterAction) return;
+    const currentPart = animationParts[currentPartIndex];
+
+    // Play/Pause ALL actions
     allActions.forEach((action) => {
       action.paused = !isPlaying;
     });
-  }, [isPlaying, actions]);
+
+    // Control the mixer's time scale
+    mixer.timeScale = isPlaying ? currentPart.speed : 0;
+  }, [isPlaying, masterAction, mixer, currentPartIndex, animationParts]);
 
   // This is the core update loop
   useFrame((state, delta) => {
-    if (!actions || !mixer) return;
-
-    const allActions = Object.values(actions).filter((action) => action);
-    const masterAction = allActions[0];
     if (!masterAction) return;
 
     const currentPart = animationParts[currentPartIndex];
     if (!currentPart) return;
 
-    // Control speed via mixer.timeScale
-    mixer.timeScale = isPlaying ? currentPart.speed : 0;
-    mixer.update(delta);
+    // Control speed via mixer.timeScale (handles playing and paused state)
+    if (isPlaying) {
+      mixer.timeScale = currentPart.speed;
+    } else {
+      mixer.timeScale = 0;
+    }
+    mixer.update(delta); // Updates time for ALL actions
 
     // --- Camera/Object Lerping ---
     const interpolationFactor = 0.05;
@@ -231,26 +236,17 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
       const isLastPartInConfig = currentPartIndex === animationParts.length - 1;
 
       // --- BLINK: LOGIC START ---
-      // NEW LOGIC: Tie visibility to the current animation part ID
-      console.log("test1 currentPart.id", currentPart.id);
       if (eyelidMesh) {
-        const animTimeSec = masterAction.time; // This is the time in seconds
-
-        // --- Priority 1: Force SHOW period (2700ms to 3150ms) ---
-        // We check the ID of the current part, which is more reliable than time.
-        // Your animation part with id: 2 is the 2700-3150ms segment.
+        const animTimeSec = masterAction.time;
+        // Priority 1: Force SHOW period (Part ID 2)
         if (currentPart.id === 2) {
-          // If we are in the forced-SHOW period, it's always true (visible).
           eyelidMesh.visible = true;
         } else {
-          // --- Priority 2: Repeating blink (only if NOT in part 2) ---
-          // This logic now only runs when we are outside the 2700-3150ms window.
+          // Priority 2: Repeating blink for all other parts
           const cycleDuration = 2.0;
           const blinkDuration = 0.02;
           const timeInCycle = animTimeSec % cycleDuration;
-          const isRepeatingBlink = timeInCycle < blinkDuration;
-
-          eyelidMesh.visible = isRepeatingBlink;
+          eyelidMesh.visible = timeInCycle < blinkDuration;
         }
       }
       // --- BLINK: LOGIC END ---
@@ -260,6 +256,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
         // --- REPEAT LOGIC ---
         if (currentPartRepeats < currentPart.repeats - 1) {
           setCurrentPartRepeats((prev) => prev + 1);
+          // Apply reset to ALL actions for synchronized repeat
           allActions.forEach((action) => {
             action.reset();
             action.time = currentPart.start / 1000;
@@ -272,9 +269,12 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           const nextPartIndex = currentPartIndex + 1;
           setCurrentPartIndex(nextPartIndex);
           setCurrentPartRepeats(0);
+
+          const nextPart = animationParts[nextPartIndex];
+          // Apply reset to ALL actions for synchronized transition
           allActions.forEach((action) => {
             action.reset();
-            action.time = animationParts[nextPartIndex].start / 1000;
+            action.time = nextPart.start / 1000;
             action.paused = false;
             action.play();
           });
@@ -282,14 +282,19 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
         // --- STOP LOGIC ---
         else {
           // End of the entire sequence
-          setIsPlaying(false); // Tell the parent App to stop
+          setIsPlaying(false);
+          const initialPart = animationParts[0];
+
           // Reset state for the next time 'Play' is clicked
           setCurrentPartIndex(0);
           setCurrentPartRepeats(0);
-          // --- BLINK: Hide eyelid when animation stops ---
+
           if (eyelidMesh) eyelidMesh.visible = false;
+
+          // Ensure ALL actions are reset to the beginning of the sequence
           allActions.forEach((action) => {
-            action.time = animationParts[0].start / 1000;
+            action.time = initialPart.start / 1000;
+            action.paused = true;
           });
         }
       }
@@ -305,11 +310,9 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 }
 
 // ----------------------------------------------------------------------
-// --- Main App Component --- (DESIGN AND TYPO FIXES)
+// --- Main App Component ---
 // ----------------------------------------------------------------------
 export default function GirlAnimation() {
-  // --- IMPORTANT ---
-  // Replace this with the correct path to your GLB file
   const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -320,17 +323,17 @@ export default function GirlAnimation() {
   return (
     <div
       style={{
-        width: "100vw", // <-- Fixed typo, was "10Svw"
+        width: "100vw",
         height: "100vh",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
         justifyContent: "center",
-        fontFamily: "'Inter', sans-serif", // Using a cleaner font
-        background: "#111827", // Dark blue-gray background
+        fontFamily: "'Inter', sans-serif",
+        background: "#111827",
         color: "white",
         padding: "20px",
-        boxSizing: "border-box", // Ensures padding doesn't break layout
+        boxSizing: "border-box",
       }}
     >
       <h1 style={{ fontWeight: 600, fontSize: "28px", margin: "0 0 16px 0" }}>
@@ -339,15 +342,14 @@ export default function GirlAnimation() {
       <div
         style={{
           width: "100%",
-          maxWidth: "1000px", // Set a max width for large screens
-          height: "70vh", // Use viewport height
-          background: "#1F2937", // Lighter gray background for canvas
-          borderRadius: "16px", // Rounded corners
-          overflow: "hidden", // Ensures canvas stays inside border
+          maxWidth: "1000px",
+          height: "70vh",
+          background: "#1F2937",
+          borderRadius: "16px",
+          overflow: "hidden",
           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
         }}
       >
-        {/* --- FIX: Re-added the missing Canvas block --- */}
         <Canvas>
           <ambientLight intensity={0.8} />
           <Suspense fallback={null}>
@@ -361,7 +363,6 @@ export default function GirlAnimation() {
           <OrbitControls />
         </Canvas>
       </div>
-      {/* --- FIX: Moved the button to be *after* the canvas div --- */}
       <button
         onClick={handlePlayPause}
         style={{
@@ -380,7 +381,6 @@ export default function GirlAnimation() {
           boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)",
           transition: "transform 0.1s ease, box-shadow 0.1s ease",
         }}
-        // Add hover and active states inline for simplicity
         onMouseOver={(e) => {
           e.currentTarget.style.transform = "scale(1.03)";
           e.currentTarget.style.boxShadow = "0 6px 20px rgba(0, 0, 0, 0.3)";
