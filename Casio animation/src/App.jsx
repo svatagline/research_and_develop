@@ -16,8 +16,8 @@ function App() {
       <main>
         {/* <TossModelViewer />   */}
         {/* <CardDistributionAnimation/> */}
-        {/* <GirlAnimation /> */}
-        <TossModelViewerRealTime />
+        <GirlAnimation />
+        {/* <TossModelViewerRealTime /> */}
         {/* <TossModelEditing /> */}
       </main>
     </div>
