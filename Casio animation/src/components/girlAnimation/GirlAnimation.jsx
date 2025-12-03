@@ -48,7 +48,7 @@ const ANIMATION_PARTS = [
   {
     id: 3,
     start: 4600,
-    end: 6000,
+    end: 5500,
     repeats: 1,
     speed: 0.2,
     cameraPosition: [0, -0.47, 2.55],
@@ -62,7 +62,7 @@ const ANIMATION_PARTS = [
     id: 4,
     start: 0,
     end: 3000,
-    repeats: 2,
+    repeats: 1,
     speed: 0.2,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
@@ -71,73 +71,33 @@ const ANIMATION_PARTS = [
     objectScale: [1, 1, 1],
     lightPosition: [10, 10, 5],
   },
-  // {
-  //   id: 1,
-  //   start: 2800,
-  //   end: 3299,
-  //   repeats: 1,
-  //   speed: 0.5,
-  //   cameraPosition: [0, -0.47, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 10, 5],
-  // },
-  // {
-  //   id: 2,
-  //   start: 3300,
-  //   end: 3620,
-  //   repeats: 10,
-  //   speed: 0.5,
-  //   cameraPosition: [0, -0.47, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 10, 5],
-  // },
-  // {
-  //   id: 3,
-  //   start: 3620,
-  //   end: 3930,
-  //   repeats: 1,
-  //   speed: 0.1,
-  //   cameraPosition: [0, -0.47, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 10, 5],
-  // },
 
-  // {
-  //   id: 5,
-  //   start: 3730,
-  //   end: 4370,
-  //   repeats: 1,
-  //   speed: 0.2,
-  //   cameraPosition: [0, 1.1, 0],
-  //   cameraFOV: 50,
-  //   objectPosition: [-0.1, 0, -0.1],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [0, 10, 0],
-  // },
-
-  // {
-  //   id: 6,
-  //   start: 6371,
-  //   end: 9000,
-  //   repeats: 1,
-  //   speed: 0.5,
-  //   cameraPosition: [0, 1.1, 0],
-  //   cameraFOV: 50,
-  //   objectPosition: [-0.1, 0, -0.1],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [0, 10, 0],
-  // },
+  {
+    id: 5,
+    start: 6000,
+    end: 9000,
+    repeats: 1,
+    speed: 0.1,
+    cameraPosition: [0, 1.1, 0],
+    cameraFOV: 50,
+    objectPosition: [-0.1, 0, -0.1],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 0],
+  },
+  {
+    id: 6,
+    start: 9000,
+    end: 12000,
+    repeats: 0.3,
+    speed: 0.5,
+    cameraPosition: [0, 1.1, 0],
+    cameraFOV: 50,
+    objectPosition: [-0.1, 0, -0.1],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 0],
+  },
 ];
 
 // --- Model Component ---
@@ -358,7 +318,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 
   return (
     <>
-      <directionalLight ref={light} intensity={1.5} />
+      <directionalLight ref={light} intensity={5.5} />
       <primitive object={scene} ref={group} dispose={null} />
     </>
   );
