@@ -8,9 +8,9 @@ import * as THREE from "three";
 const ANIMATION_PARTS = [
   {
     id: 0,
-    start: 1000,
-    end: 1500,
-    repeats: 1,
+    start: 0,
+    end: 3000,
+    repeats: 2,
     speed: 0.2,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
@@ -19,58 +19,58 @@ const ANIMATION_PARTS = [
     objectScale: [1, 1, 1],
     lightPosition: [10, 10, 5],
   },
-  {
-    id: 10,
-    start: 1501,
-    end: 2000,
-    repeats: 1,
-    speed: 0.05,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-  {
-    id: 1,
-    start: 2800,
-    end: 3299,
-    repeats: 1,
-    speed: 0.5,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-  {
-    id: 2,
-    start: 3300,
-    end: 3620,
-    repeats: 10,
-    speed: 0.5,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
-  {
-    id: 3,
-    start: 3620,
-    end: 3930,
-    repeats: 1,
-    speed: 0.1,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
-  },
+  // {
+  //   id: 10,
+  //   start: 1501,
+  //   end: 2000,
+  //   repeats: 1,
+  //   speed: 0.05,
+  //   cameraPosition: [0, -0.47, 2.55],
+  //   cameraFOV: 40,
+  //   objectPosition: [-0.2, -0.8, 0],
+  //   objectRotation: [0, 0, 0],
+  //   objectScale: [1, 1, 1],
+  //   lightPosition: [10, 10, 5],
+  // },
+  // {
+  //   id: 1,
+  //   start: 2800,
+  //   end: 3299,
+  //   repeats: 1,
+  //   speed: 0.5,
+  //   cameraPosition: [0, -0.47, 2.55],
+  //   cameraFOV: 40,
+  //   objectPosition: [-0.2, -0.8, 0],
+  //   objectRotation: [0, 0, 0],
+  //   objectScale: [1, 1, 1],
+  //   lightPosition: [10, 10, 5],
+  // },
+  // {
+  //   id: 2,
+  //   start: 3300,
+  //   end: 3620,
+  //   repeats: 10,
+  //   speed: 0.5,
+  //   cameraPosition: [0, -0.47, 2.55],
+  //   cameraFOV: 40,
+  //   objectPosition: [-0.2, -0.8, 0],
+  //   objectRotation: [0, 0, 0],
+  //   objectScale: [1, 1, 1],
+  //   lightPosition: [10, 10, 5],
+  // },
+  // {
+  //   id: 3,
+  //   start: 3620,
+  //   end: 3930,
+  //   repeats: 1,
+  //   speed: 0.1,
+  //   cameraPosition: [0, -0.47, 2.55],
+  //   cameraFOV: 40,
+  //   objectPosition: [-0.2, -0.8, 0],
+  //   objectRotation: [0, 0, 0],
+  //   objectScale: [1, 1, 1],
+  //   lightPosition: [10, 10, 5],
+  // },
 
   // {
   //   id: 5,
@@ -220,6 +220,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
       new THREE.Vector3(...currentPart.cameraPosition),
       interpolationFactor
     );
+
     camera.fov += (currentPart.cameraFOV - camera.fov) * interpolationFactor;
     camera.updateProjectionMatrix();
     if (light.current) {
@@ -328,7 +329,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 // --- Main App Component ---
 // ----------------------------------------------------------------------
 export default function GirlAnimation() {
-  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
+  const GLB_PATH = "girlAnimation/2D ANIMATION RESET.glb";
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handlePlayPause = () => {
