@@ -17,7 +17,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
+    lightPosition: [10, 15, 8],
   },
   {
     id: 1,
@@ -30,7 +30,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
+    lightPosition: [10, 15, 8],
   },
   {
     id: 2,
@@ -43,7 +43,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
+    lightPosition: [10, 15, 8],
   },
   {
     id: 3,
@@ -56,7 +56,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
+    lightPosition: [10, 15, 8],
   },
   {
     id: 4,
@@ -69,7 +69,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.2, -0.8, 0],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 5],
+    lightPosition: [10, 15, 8],
   },
 
   {
@@ -83,11 +83,11 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.1, 0, -0.1],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 0],
+    lightPosition: [10, 10, 15],
   },
   {
     id: 6,
-    start: 9000,
+    start: 10000,
     end: 12000,
     repeats: 0.3,
     speed: 0.5,
@@ -96,7 +96,7 @@ const ANIMATION_PARTS = [
     objectPosition: [-0.1, 0, -0.1],
     objectRotation: [0, 0, 0],
     objectScale: [1, 1, 1],
-    lightPosition: [10, 10, 0],
+    lightPosition: [10, 10, 15],
   },
 ];
 
