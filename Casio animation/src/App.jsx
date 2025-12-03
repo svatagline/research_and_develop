@@ -6,6 +6,7 @@ import ModelViewer from "./components/girlAnimation/girlAnimationUW";
 import TossModelEditing from "./components/toss/TossModelEditing";
 import TossModelViewerRealTime from "./components/toss/TossModelViewerRealTime";
 import LightAnimationPlayer from "./components/girlAnimation/LightAnimationPlayer";
+import SnakeTest from "./components/SnakeTest";
 
 // Renaming ModelViewer (from girlAnimationUW) to GirlAnimationLight for contextual clarity
 const GirlAnimationLight = () => (
@@ -41,6 +42,9 @@ function AppContent() {
             <Link to="/ModelViewer" className="btn btn-success btn-sm shadow">
               ModelViewer
             </Link>
+            <Link to="/SnakeTest" className="btn btn-success btn-sm shadow">
+              SnakeTest
+            </Link>
           </nav>
         </div>
       </header>
@@ -64,6 +68,7 @@ function AppContent() {
               path="/LightAnimationPlayer"
               element={<LightAnimationPlayer />}
             />
+            <Route path="/SnakeTest" element={<SnakeTest />} />
           </Routes>
         </div>
       </main>
