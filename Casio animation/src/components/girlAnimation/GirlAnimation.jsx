@@ -5,26 +5,32 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 // --- ANIMATION CONFIGURATION ---
+const standPose = {
+  id: 0,
+  start: 0,
+  end: 2350,
+  repeats: 1,
+  speed: 0.2,
+  cameraPosition: [0, -0.47, 2.55],
+  cameraFOV: 40,
+  objectPosition: [-0.2, -0.8, 0],
+  objectRotation: [0, 0, 0],
+  objectScale: [1, 1, 1],
+  lightPosition: [10, 15, 8],
+};
+
 const ANIMATION_PARTS = [
   {
+    ...standPose,
     id: 0,
-    start: 0,
-    end: 3000,
     repeats: 2,
-    speed: 0.2,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 15, 8],
   },
   {
     id: 1,
     start: 3001,
     end: 4000,
     repeats: 1,
-    speed: 0.2,
+    speed: 0.6,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
@@ -50,7 +56,7 @@ const ANIMATION_PARTS = [
     start: 4600,
     end: 5500,
     repeats: 1,
-    speed: 0.2,
+    speed: 0.6,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
@@ -59,25 +65,31 @@ const ANIMATION_PARTS = [
     lightPosition: [10, 15, 8],
   },
   {
+    ...standPose,
     id: 4,
-    start: 0,
-    end: 3000,
-    repeats: 1,
-    speed: 0.2,
-    cameraPosition: [0, -0.47, 2.55],
-    cameraFOV: 40,
-    objectPosition: [-0.2, -0.8, 0],
-    objectRotation: [0, 0, 0],
-    objectScale: [1, 1, 1],
-    lightPosition: [10, 15, 8],
+    repeats: 2,
   },
+  // {
+
+  //   id: 4,
+  //   start: 0,
+  //   end: 3000,
+  //   repeats: 1,
+  //   speed: 0.05,
+  //   cameraPosition: [0, -0.47, 2.55],
+  //   cameraFOV: 40,
+  //   objectPosition: [-0.2, -0.8, 0],
+  //   objectRotation: [0, 0, 0],
+  //   objectScale: [1, 1, 1],
+  //   lightPosition: [10, 15, 8],
+  // },
 
   {
     id: 5,
     start: 6000,
     end: 9000,
     repeats: 1,
-    speed: 0.1,
+    speed: 0.2,
     cameraPosition: [0, 1.1, 0],
     cameraFOV: 50,
     objectPosition: [-0.1, 0, -0.1],
@@ -90,7 +102,7 @@ const ANIMATION_PARTS = [
     start: 9000,
     end: 11000,
     repeats: 1,
-    speed: 0.3,
+    speed: 0.5,
     cameraPosition: [0, 1.1, 0],
     cameraFOV: 50,
     objectPosition: [-0.1, 0, -0.1],
@@ -126,6 +138,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
   useEffect(() => {
     if (scene) {
       let foundEyelid = null;
+      let foundRightHair = null;
       scene.traverse((object) => {
         // Skinned mesh fix
         if (object.isSkinnedMesh) {
@@ -138,6 +151,11 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           console.log("Found eyelid object:", object);
           foundEyelid = object;
           object.visible = false;
+        }
+        // console.log("Right Hair Pos", object?.name);
+        if (!foundRightHair && object.name === "right_hair_group") {
+          console.log("Found Right Hair Group:", object);
+          foundRightHair = object;
         }
       });
 
@@ -254,14 +272,16 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
       if (eyelidMesh) {
         const animTimeSec = masterAction.time;
         // Priority 1: Force SHOW period (Part ID 2)
-        if (currentPart.id === 2) {
+        if (currentPartIndex === 2) {
           eyelidMesh.visible = true;
         } else {
           // Priority 2: Repeating blink for all other parts
           const cycleDuration = 2.0;
           const blinkDuration = 0.02;
           const timeInCycle = animTimeSec % cycleDuration;
-          eyelidMesh.visible = timeInCycle < blinkDuration;
+          if (currentPartIndex == 4) {
+            eyelidMesh.visible = timeInCycle < blinkDuration;
+          }
         }
       }
       // --- BLINK: LOGIC END ---
@@ -366,7 +386,7 @@ export default function GirlAnimation() {
         }}
       >
         <Canvas>
-          <ambientLight intensity={0.8} />
+          <ambientLight intensity={1.8} />
           <Suspense fallback={null}>
             <Model
               modelPath={GLB_PATH}
