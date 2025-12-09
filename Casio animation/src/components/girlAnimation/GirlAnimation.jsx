@@ -11,6 +11,7 @@ const standPose = {
   end: 2350,
   repeats: 1,
   speed: 0.3,
+  //  cameraPosition: [-0.14, -0.47, 2.55],
   cameraPosition: [0, -0.47, 2.55],
   cameraFOV: 40,
   objectPosition: [-0.2, -0.8, 0],
