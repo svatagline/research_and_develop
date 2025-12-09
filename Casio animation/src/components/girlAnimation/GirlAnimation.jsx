@@ -20,11 +20,11 @@ const standPose = {
 };
 
 const ANIMATION_PARTS = [
-  // {
-  //   ...standPose,
-  //   id: 0,
-  //   repeats: 2,
-  // },
+  {
+    ...standPose,
+    id: 0,
+    repeats: 2,
+  },
   {
     id: 1,
     start: 3001,
@@ -138,7 +138,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
   useEffect(() => {
     if (scene) {
       let foundEyelid = null;
-      let foundRightHair = null;
+      // let foundRightHair = null;
       scene.traverse((object) => {
         // Skinned mesh fix
         if (object.isSkinnedMesh) {
@@ -151,11 +151,6 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
           console.log("Found eyelid object:", object);
           foundEyelid = object;
           object.visible = false;
-        }
-        // console.log("Right Hair Pos", object?.name);
-        if (!foundRightHair && object.name === "right_hair_group") {
-          console.log("Found Right Hair Group:", object);
-          foundRightHair = object;
         }
       });
 
@@ -274,12 +269,14 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
         // Priority 1: Force SHOW period (Part ID 2)
         if (currentPartIndex === 2) {
           eyelidMesh.visible = true;
+        } else if (currentPartIndex > 2) {
+          eyelidMesh.visible = false;
         } else {
           // Priority 2: Repeating blink for all other parts
           const cycleDuration = 2.0;
           const blinkDuration = 0.02;
           const timeInCycle = animTimeSec % cycleDuration;
-          if (currentPartIndex == 4) {
+          if (currentPartIndex == 2) {
             eyelidMesh.visible = timeInCycle < blinkDuration;
           }
         }
