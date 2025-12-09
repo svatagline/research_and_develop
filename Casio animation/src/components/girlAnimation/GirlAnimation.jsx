@@ -376,7 +376,7 @@ export default function GirlAnimation() {
           width: "100%",
           maxWidth: "1000px",
           height: "70vh",
-          background: "#1F2937",
+          background: "#ffffff00",
           borderRadius: "16px",
           overflow: "hidden",
           boxShadow: "0 10px 25px rgba(0, 0, 0, 0.2)",
