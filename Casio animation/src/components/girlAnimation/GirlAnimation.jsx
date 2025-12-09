@@ -69,24 +69,23 @@ const ANIMATION_PARTS = [
     id: 4,
     repeats: 2,
   },
-  // {
-
-  //   id: 4,
-  //   start: 0,
-  //   end: 3000,
-  //   repeats: 1,
-  //   speed: 0.05,
-  //   cameraPosition: [0, -0.47, 2.55],
-  //   cameraFOV: 40,
-  //   objectPosition: [-0.2, -0.8, 0],
-  //   objectRotation: [0, 0, 0],
-  //   objectScale: [1, 1, 1],
-  //   lightPosition: [10, 15, 8],
-  // },
-
   {
     id: 5,
-    start: 6000,
+    start: 10800,
+    end: 11000,
+    repeats: 1,
+    speed: 0.05,
+    cameraPosition: [0, 1.1, 0],
+    cameraFOV: 50,
+    objectPosition: [-0.1, 0, -0.1],
+    objectRotation: [0, 0, 0],
+    objectScale: [1, 1, 1],
+    lightPosition: [10, 10, 15],
+  },
+
+  {
+    id: 6,
+    start: 6500,
     end: 9000,
     repeats: 1,
     speed: 0.2,
@@ -98,7 +97,7 @@ const ANIMATION_PARTS = [
     lightPosition: [10, 10, 15],
   },
   {
-    id: 6,
+    id: 7,
     start: 9000,
     end: 11000,
     repeats: 1,
