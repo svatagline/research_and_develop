@@ -20,17 +20,17 @@ const standPose = {
 };
 
 const ANIMATION_PARTS = [
-  {
-    ...standPose,
-    id: 0,
-    repeats: 2,
-  },
+  // {
+  //   ...standPose,
+  //   id: 0,
+  //   repeats: 2,
+  // },
   {
     id: 1,
     start: 3001,
     end: 4000,
     repeats: 1,
-    speed: 0.6,
+    speed: 0.3,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
@@ -56,7 +56,7 @@ const ANIMATION_PARTS = [
     start: 4600,
     end: 5500,
     repeats: 1,
-    speed: 0.6,
+    speed: 0.3,
     cameraPosition: [0, -0.47, 2.55],
     cameraFOV: 40,
     objectPosition: [-0.2, -0.8, 0],
