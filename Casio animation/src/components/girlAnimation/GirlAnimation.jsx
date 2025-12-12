@@ -345,7 +345,7 @@ function Model({ modelPath, animationParts, isPlaying, setIsPlaying }) {
 // --- Main App Component ---
 // ----------------------------------------------------------------------
 export default function GirlAnimation() {
-  const GLB_PATH = "girlAnimation/2D ANIMATION RESET.glb";
+  const GLB_PATH = "girlAnimation/2D ANIMATION.glb";
   const [isPlaying, setIsPlaying] = useState(false);
 
   const handlePlayPause = () => {
