@@ -1,11 +1,12 @@
-import { SpinePlayer } from '@esotericsoftware/spine-player';
-import '@esotericsoftware/spine-player/dist/spine-player.css';
-import { useEffect, useRef, useState } from 'react';
+import { SpinePlayer } from "@esotericsoftware/spine-player";
+import "@esotericsoftware/spine-player/dist/spine-player.css";
+import { useEffect, useRef, useState } from "react";
 
 // Your file paths
-const JSON_PATH = "animation/girl_1.json";
-const ATLAS_PATH = "animation/girl_1.atlas";
-const IMAGE_PATH = "animation/girl_1.png";
+const file = "girl_character";
+const JSON_PATH = `animation/${file}.json`;
+const ATLAS_PATH = `animation/${file}.atlas`;
+const IMAGE_PATH = `animation/${file}.png`;
 
 // A list of all possible lip slots, based on your JSON
 // This helps us turn OFF all other lips
@@ -16,7 +17,7 @@ const ALL_LIP_SLOTS = [
   "angry_lips",
   "thinking_lips",
   "irritated_lips",
-  "smiling_lips"
+  "smiling_lips",
 ];
 
 // ... (imports remain the same)
@@ -26,26 +27,26 @@ function GirlAnimation() {
   const [player, setPlayer] = useState(null);
 
   useEffect(() => {
-    let playerInstance; 
+    let playerInstance;
 
-  if (containerRef.current) {
+    if (containerRef.current) {
       playerInstance = new SpinePlayer(containerRef.current, {
         jsonUrl: JSON_PATH,
         atlasUrl: ATLAS_PATH,
         pngUrl: IMAGE_PATH,
-        
+
         // !! ALL THREE SETTINGS !!
-        background: "transparent",  // 1. Tell Spine to clear to transparent
-        alpha: true,                // 2. Tell Browser to create a transparent canvas
-        premultipliedAlpha: false,  // 3. Match your asset export (keep as false for now)
+        background: "transparent", // 1. Tell Spine to clear to transparent
+        alpha: true, // 2. Tell Browser to create a transparent canvas
+        premultipliedAlpha: false, // 3. Match your asset export (keep as false for now)
 
         viewport: { padLeft: 0, padRight: 0, padTop: 0, padBottom: 0 },
-        animation: "Idle_normal", 
+        // animation: "Idle_normal",
       });
-      
+
       setPlayer(playerInstance);
     }
-    
+
     return () => {
       if (playerInstance) {
         playerInstance.dispose();
@@ -74,31 +75,43 @@ function GirlAnimation() {
   };
 
   return (
-    <div style={{ backgroundColor: '#ffffff', padding: '20px', textAlign: 'center' }}>
-      
-      <div 
-        ref={containerRef} 
-        style={{ width: '500px', height: '500px' }}
-      />
-      
+    <div
+      style={{
+        backgroundColor: "#ffffff",
+        padding: "20px",
+        textAlign: "center",
+      }}
+    >
+      <div ref={containerRef} style={{ width: "500px", height: "500px" }} />
+
       {/* ... (buttons remain the same) ... */}
-      <button 
-        onClick={() => setLipExpression("happy_lips")} 
-        style={{ marginTop: '10px', marginRight: '10px', padding: '10px 20px', fontSize: '16px' }}
+      <button
+        onClick={() => setLipExpression("happy_lips")}
+        style={{
+          marginTop: "10px",
+          marginRight: "10px",
+          padding: "10px 20px",
+          fontSize: "16px",
+        }}
       >
         Make Happy
       </button>
 
-      <button 
-        onClick={() => setLipExpression("sad_lips")} 
-        style={{ marginTop: '10px', padding: '10px 20px', fontSize: '16px' }}
+      <button
+        onClick={() => setLipExpression("sad_lips")}
+        style={{ marginTop: "10px", padding: "10px 20px", fontSize: "16px" }}
       >
         Make Sad
       </button>
 
-      <button 
-        onClick={() => setLipExpression("normal_lips")} 
-        style={{ marginTop: '10px', marginLeft: '10px', padding: '10px 20px', fontSize: '16px' }}
+      <button
+        onClick={() => setLipExpression("normal_lips")}
+        style={{
+          marginTop: "10px",
+          marginLeft: "10px",
+          padding: "10px 20px",
+          fontSize: "16px",
+        }}
       >
         Make Normal
       </button>

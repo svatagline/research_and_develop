@@ -1,0 +1,132 @@
+
+Ice cream character.png
+size: 1998,779
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Eating lips
+  rotate: true
+  xy: 995, 5
+  size: 267, 162
+  orig: 269, 164
+  offset: 1, 1
+  index: -1
+Happy_lips 2
+  rotate: true
+  xy: 561, 2
+  size: 270, 150
+  orig: 272, 152
+  offset: 1, 1
+  index: -1
+body
+  rotate: true
+  xy: 240, 274
+  size: 503, 1257
+  orig: 507, 1261
+  offset: 2, 2
+  index: -1
+choti
+  rotate: true
+  xy: 1883, 654
+  size: 123, 105
+  orig: 123, 106
+  offset: 0, 1
+  index: -1
+ear_left
+  rotate: false
+  xy: 1778, 38
+  size: 218, 303
+  orig: 220, 304
+  offset: 1, 0
+  index: -1
+ear_right
+  rotate: false
+  xy: 1558, 37
+  size: 218, 304
+  orig: 220, 304
+  offset: 1, 0
+  index: -1
+eye _left
+  rotate: false
+  xy: 1883, 509
+  size: 97, 143
+  orig: 99, 145
+  offset: 1, 1
+  index: -1
+eye _right
+  rotate: false
+  xy: 1880, 364
+  size: 97, 143
+  orig: 99, 145
+  offset: 1, 1
+  index: -1
+eye blink
+  rotate: true
+  xy: 713, 2
+  size: 270, 148
+  orig: 272, 150
+  offset: 1, 1
+  index: -1
+eyevbrow _normal
+  rotate: true
+  xy: 1499, 541
+  size: 236, 47
+  orig: 238, 49
+  offset: 1, 1
+  index: -1
+eyevbrow _sad
+  rotate: true
+  xy: 2, 3
+  size: 241, 24
+  orig: 243, 26
+  offset: 1, 1
+  index: -1
+hand normal _left
+  rotate: false
+  xy: 2, 246
+  size: 236, 531
+  orig: 237, 532
+  offset: 1, 1
+  index: -1
+hand normal _right
+  rotate: true
+  xy: 28, 8
+  size: 236, 531
+  orig: 237, 532
+  offset: 0, 1
+  index: -1
+leg left
+  rotate: true
+  xy: 1558, 548
+  size: 229, 323
+  orig: 232, 326
+  offset: 1, 2
+  index: -1
+leg right
+  rotate: true
+  xy: 1558, 343
+  size: 203, 320
+  orig: 206, 323
+  offset: 2, 2
+  index: -1
+normal _lips 1
+  rotate: true
+  xy: 863, 3
+  size: 269, 130
+  orig: 271, 132
+  offset: 1, 1
+  index: -1
+punch
+  rotate: true
+  xy: 1159, 10
+  size: 262, 316
+  orig: 262, 317
+  offset: 0, 1
+  index: -1
+sad lips
+  rotate: true
+  xy: 1477, 13
+  size: 259, 79
+  orig: 261, 81
+  offset: 1, 1
+  index: -1
