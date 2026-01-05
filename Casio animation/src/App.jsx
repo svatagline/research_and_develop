@@ -1,5 +1,6 @@
- 
 import SpinePlayer from "./components/spine animation/SpineAnimation";
+import "@esotericsoftware/spine-player/dist/spine-player.css";
+
 // import GirlAnimation from "./components/girlAnimation/GirlAnimationUW";
 // import TossModelViewer from "./components/toss/TossModelViewer";
 
@@ -12,10 +13,9 @@ function App() {
         <h1>Coin Toss Game</h1>
       </header>
       <main>
-      {/* <TossModelViewer />   */}
+        {/* <TossModelViewer />   */}
         {/* <CardDistributionAnimation/> */}
-        <SpinePlayer/>
-   
+        <SpinePlayer />
       </main>
     </div>
   );

@@ -1,54 +1,54 @@
 
-girl_character.png
-size: 1369,638
+girl character.png
+size: 1351,653
 format: RGBA8888
 filter: Linear,Linear
 repeat: none
 earing_R
   rotate: true
-  xy: 1287, 146
+  xy: 1305, 207
   size: 212, 41
   orig: 220, 49
   offset: 4, 4
   index: -1
 face
   rotate: false
-  xy: 821, 3
+  xy: 821, 18
   size: 264, 260
   orig: 285, 263
   offset: 12, 0
   index: -1
 front_left_hair
   rotate: false
-  xy: 1256, 360
+  xy: 1087, 2
   size: 111, 276
   orig: 128, 319
   offset: 13, 25
   index: -1
 hair_braid
   rotate: false
-  xy: 1151, 285
+  xy: 1200, 68
   size: 103, 351
   orig: 148, 395
   offset: 42, 7
   index: -1
 head_hair
   rotate: false
-  xy: 821, 265
+  xy: 821, 280
   size: 328, 371
   orig: 342, 377
   offset: 6, 0
   index: -1
 right_lower_hand_2
   rotate: true
-  xy: 2, 2
+  xy: 2, 17
   size: 634, 817
   orig: 675, 819
   offset: 0, 2
   index: -1
 top_front_hair
   rotate: true
-  xy: 1087, 33
+  xy: 1151, 421
   size: 230, 198
   orig: 263, 247
   offset: 19, 41

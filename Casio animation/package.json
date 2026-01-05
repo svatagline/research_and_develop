@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@esotericsoftware/spine-player": "^4.2.95",
+    "@esotericsoftware/spine-player": "^4.2.96",
     "@pixi/graphics-extras": "^7.4.3",
     "@pixi/react": "^8.0.3",
     "@react-three/drei": "^10.7.6",
